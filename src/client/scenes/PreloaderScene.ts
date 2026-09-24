@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser';
+import { queueSfxLoads } from '../audio/sfx';
 
 type ManifestImage = { key: string; file: string };
 
@@ -58,6 +59,7 @@ export class PreloaderScene extends Phaser.Scene {
       if (!this.textures.exists(key))
         this.load.image(key, assetUrl(`assets/${file}`));
     }
+    queueSfxLoads(this, assetUrl);
     if (this.load.list.size > 0) {
       // A missing file logs a load error and simply keeps its fallback.
       this.load.once(Phaser.Loader.Events.COMPLETE, () => this.finishBoot());

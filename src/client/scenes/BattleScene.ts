@@ -9,6 +9,7 @@ import {
   type DailyScoreStats,
 } from '../../shared/api';
 import { PLAYER_BALANCE } from '../../shared/balance/player';
+import { playSfx } from '../audio/sfx';
 import type { WeaponId } from '../../shared/balance/weapons';
 import {
   ENEMIES,
@@ -23,6 +24,14 @@ import {
 } from '../../shared/balance/enemies';
 import { zoneBalance } from '../../shared/balance/hitZones';
 import { resolveHit } from '../../shared/combat/hitDetection';
+import {
+  EMPTY_CONTACTS,
+  releaseContacts,
+  stepContacts,
+  type ContactEvent,
+  type ContactState,
+} from '../../shared/combat/contacts';
+import { CONTACT_EVENT, type ContactSignal } from '../combat/contactEvents';
 import { computeStrike, blockedDamage, guardBrokenDamage } from '../../shared/combat/damage';
 import {
   applyGuardDamage,
@@ -71,6 +80,7 @@ import type {
   BurstEvent,
   DodgeState,
   GestureClassification,
+  GesturePoint,
   GuardMeter,
 } from '../../shared/combat/types';
 import { SwipeInput } from '../combat/SwipeInput';
@@ -148,6 +158,7 @@ export class BattleScene extends Phaser.Scene {
   private rig: PlayerRigView;
   private hud: Hud;
   private tracker: PlayerPatternTracker;
+  private contacts: ContactState = EMPTY_CONTACTS;
 
   private playerHealth: number;
   private playerGuard: GuardMeter;
@@ -238,6 +249,8 @@ export class BattleScene extends Phaser.Scene {
     new SwipeInput(this, {
       isBlockedAt: (x, y) => this.hud.isPointOverUi(x, y),
       onGesture: (gesture) => this.onGesture(gesture),
+      onSegment: (a, b, inputTs) => this.onSwipeSegment(a, b, inputTs),
+      onRelease: (t) => this.closeContacts(t, performance.now()),
     });
 
     // Desktop controls: Space or right mouse to block, Shift to dodge, Q for burst.
@@ -367,12 +380,14 @@ export class BattleScene extends Phaser.Scene {
     this.brain = new EnemyBrain(
       def,
       {
-        onTelegraphStart: (attack, impactAt) =>
+        onTelegraphStart: (attack, impactAt) => {
+          playSfx(this, 'telegraph');
           view.playTelegraph(
             Math.max(1, impactAt - this.time.now),
             PLAYER_BALANCE.counterWindowMs,
             attack.style
-          ),
+          );
+        },
         onAttackImpact: (attack) => this.onEnemyAttackImpact(attack),
         onRecoverStart: () => view.playRecover(),
         onBlockStart: (stance) => view.playBlock(stance),
@@ -426,6 +441,7 @@ export class BattleScene extends Phaser.Scene {
     const completedEncounter = this.encounterNumber;
     this.mode = 'travel';
     this.stats.foesFelled += 1;
+    playSfx(this, 'felled');
     this.encounterNumber += 1;
     this.gainPlayerBurst('kill');
     this.healPlayer(HEAL_PER_KILL);
@@ -823,6 +839,7 @@ export class BattleScene extends Phaser.Scene {
     this.nextAttackReadyAt = now + Math.round(recoveryMs * modifiers.attackRecoveryMultiplier);
 
     this.rig.swing(gesture.direction, gesture.heavy);
+    playSfx(this, gesture.heavy ? 'swing_heavy' : 'swing_light');
 
     const brain = this.brain;
     const view = this.enemyView;
@@ -832,17 +849,7 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
 
-    const hitZones = view.getHitZones().map((zone): ActiveHitZone => {
-      if (zone.id !== 'head' || zone.shape.type !== 'circle') return zone;
-      return {
-        ...zone,
-        shape: {
-          ...zone.shape,
-          radius: zone.shape.radius * weapon.weakPointHitRadiusMultiplier,
-        },
-      };
-    });
-    const hitZone = resolveHit(gesture.path, hitZones);
+    const hitZone = resolveHit(gesture.path, this.strikeZones(view));
     drawSlashTrail(this, gesture.path, gesture.heavy, hitZone !== null);
     this.tracker.recordAttack(gesture.direction, hitZone?.id ?? null, now);
 
@@ -873,6 +880,7 @@ export class BattleScene extends Phaser.Scene {
       this.enemyHealth = Math.max(0, this.enemyHealth - chip);
       this.stats.damageDealt += chip;
       view.playBlockedHit();
+      playSfx(this, 'enemy_block');
       spawnPaperFragments(this, zonePos.x - 40, zonePos.y, 3, PAPER.guard);
       this.hud.showFloatingText(zonePos.x, zonePos.y - 20, 'BLOCKED', '#4f8fdd');
       this.applyEnemyGuardDamage(strike.guardDamage, now);
@@ -890,6 +898,8 @@ export class BattleScene extends Phaser.Scene {
       if (zoneInfo.weakPoint) this.stats.weakPointHits += 1;
       this.gainPlayerBurst(classifyHitBurstEvent(zoneInfo.weakPoint, gesture.heavy));
       view.playHitReaction(hitZone.id, gesture.heavy);
+      playSfx(this, `hit_${weapon.id}`, { volume: gesture.heavy ? 1.2 : 1 });
+      if (zoneInfo.weakPoint) playSfx(this, 'hit_weak');
       spawnPaperFragments(this, zonePos.x, zonePos.y, gesture.heavy ? 10 : 6);
       this.hud.showFloatingText(
         zonePos.x,
@@ -935,6 +945,58 @@ export class BattleScene extends Phaser.Scene {
     if (this.enemyHealth <= 0) this.onEnemyFelled();
   }
 
+  /** Live hit zones as the current weapon sees them (wider head for some). */
+  private strikeZones(view: PaperEnemyView): ActiveHitZone[] {
+    const weapon = weaponForRun(this.run);
+    return view.getHitZones().map((zone): ActiveHitZone => {
+      if (zone.id !== 'head' || zone.shape.type !== 'circle') return zone;
+      return {
+        ...zone,
+        shape: {
+          ...zone.shape,
+          radius: zone.shape.radius * weapon.weakPointHitRadiusMultiplier,
+        },
+      };
+    });
+  }
+
+  /**
+   * Blade contact while the swipe is still moving. Sensory only — the strike
+   * resolves on release in onGesture. Contacts are suppressed whenever that
+   * release would be ignored anyway (shield up, recovering, bursting).
+   */
+  private onSwipeSegment(a: GesturePoint, b: GesturePoint, inputTs: number): void {
+    const view = this.enemyView;
+    const live =
+      this.mode === 'fight' &&
+      !this.burstActive &&
+      !this.holdingBlock &&
+      this.time.now >= this.nextAttackReadyAt &&
+      view !== null &&
+      this.brain !== null &&
+      !this.brain.isDead();
+    if (!live || !view) {
+      this.closeContacts(b.t, inputTs);
+      return;
+    }
+    const step = stepContacts(this.contacts, a, b, this.strikeZones(view));
+    this.contacts = step.state;
+    this.emitContacts(step.events, inputTs);
+  }
+
+  private closeContacts(t: number, inputTs: number): void {
+    if (this.contacts.touching.size === 0) return;
+    this.emitContacts(releaseContacts(this.contacts, t), inputTs);
+    this.contacts = EMPTY_CONTACTS;
+  }
+
+  private emitContacts(events: readonly ContactEvent[], inputTs: number): void {
+    for (const event of events) {
+      const signal: ContactSignal = { ...event, inputTs, emitTs: performance.now() };
+      this.game.events.emit(CONTACT_EVENT, signal);
+    }
+  }
+
   private zoneCenter(zone: ActiveHitZone): { x: number; y: number } {
     return { x: zone.shape.x, y: zone.shape.y };
   }
@@ -949,6 +1011,7 @@ export class BattleScene extends Phaser.Scene {
   private onEnemyGuardBreak(): void {
     this.enemyGuardBrokenState = true;
     this.enemyView?.playGuardBreak();
+    playSfx(this, 'guard_break');
     this.hud.showMessage('ENEMY GUARD BROKEN!', '#d94f3d');
     const torso = this.enemyView?.getHitZones().find((z) => z.id === 'torso');
     if (torso) spawnPaperFragments(this, torso.shape.x, torso.shape.y, 14);
@@ -970,6 +1033,7 @@ export class BattleScene extends Phaser.Scene {
   /** The player's strike was caught by the Duelist's counter stance. */
   private onParried(): void {
     this.enemyView?.playParry();
+    playSfx(this, 'parried');
     this.hud.showMessage('PARRIED!', '#d94f3d', 32);
     this.cameras.main.shake(90, 0.004);
     // The riposte itself arrives via the normal telegraph -> impact flow,
@@ -1007,6 +1071,7 @@ export class BattleScene extends Phaser.Scene {
     const result = startDodge(this.playerDodge, now, PLAYER_BALANCE);
     if (!result.started) return;
     this.playerDodge = result.state;
+    playSfx(this, 'dodge');
     this.rig.playDodge(PLAYER_BALANCE.dodgeDurationMs);
   }
 
@@ -1026,6 +1091,7 @@ export class BattleScene extends Phaser.Scene {
       this.rig.evadeFlash();
       if (perfectDodge) {
         this.stats.dodgeCounters += 1;
+        playSfx(this, 'counter');
         this.tracker.recordCounter(now);
         this.rig.counterFlash();
         this.hud.showMessage('DODGE COUNTER!', '#7fc9a0', 30);
@@ -1060,6 +1126,7 @@ export class BattleScene extends Phaser.Scene {
     switch (outcome) {
       case 'counter': {
         this.stats.perfectCounters += 1;
+        playSfx(this, 'counter');
         this.tracker.recordCounter(now);
         this.gainPlayerBurst('perfectCounter');
         this.rig.counterFlash();
@@ -1088,6 +1155,7 @@ export class BattleScene extends Phaser.Scene {
           false
         );
         this.gainPlayerBurst('normalBlock');
+        playSfx(this, 'player_block');
         this.cameras.main.shake(70, 0.003);
         spawnPaperFragments(this, 300, 620, 4, PAPER.guard);
         // Shield durability gets chewed up quickly: most foes shatter it in 2-3 blocks.
@@ -1119,6 +1187,7 @@ export class BattleScene extends Phaser.Scene {
     this.holdingBlock = false;
     this.lastShieldPressAt = null;
     this.rig.breakShield();
+    playSfx(this, 'guard_break');
     this.hud.showMessage('SHIELD DESTROYED!', '#d94f3d');
     spawnPaperFragments(this, 300, 640, 14, PAPER.guard);
     this.cameras.main.shake(160, 0.008);
@@ -1155,6 +1224,7 @@ export class BattleScene extends Phaser.Scene {
     this.playerHealth = Math.max(0, this.playerHealth - amount);
     this.stats.damageTaken += amount;
     if (fullHit) {
+      playSfx(this, 'player_hit');
       damageVignette(this);
       this.cameras.main.shake(140, 0.006);
       this.hud.showFloatingText(420, 480, `-${amount}`, '#d94f3d');
@@ -1229,6 +1299,7 @@ export class BattleScene extends Phaser.Scene {
       this.time.now
     );
     this.enemyView.playHitReaction(target?.id ?? 'torso', false);
+    playSfx(this, `hit_${weaponId}`);
     spawnPaperFragments(this, center.x, center.y, 5);
     this.hud.showFloatingText(center.x, center.y - 24, `-${damage}`, '#ffb347');
     this.cameras.main.shake(60, 0.003);
@@ -1443,6 +1514,7 @@ export class BattleScene extends Phaser.Scene {
     );
     button.on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
       text.setScale(0.95);
+      playSfx(this, 'ui_tap');
       onClick();
     });
   }

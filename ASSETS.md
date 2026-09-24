@@ -65,7 +65,26 @@ hit zones), so it needs **separate body-part PNGs**, not one flat image:
 Also useful, small: HUD icons 64×64 (heart, shield, spark, dodge chevrons),
 a slash-arc streak texture (~512×128, white on transparent), an ember dot.
 
-## Tier 3 — audio (nothing is wired yet, but it's the cheapest "feel" upgrade)
+## Wired SFX (Kenney, CC0)
+
+Combat sounds live in `src/client/public/assets/sfx/` as `<key>_<n>.ogg` and
+are played through `src/client/audio/sfx.ts`. All files come unmodified from
+Kenney's CC0 packs (license text: `sfx/LICENSE-kenney.txt`), except
+`telegraph_*` which were gain-boosted +16 dB.
+
+| Key | Source pack → files |
+|---|---|
+| `swing_light` / `swing_heavy` | Casino Audio → card-slide / card-shove (paper swish) |
+| `hit_sword` | RPG Audio → knifeSlice |
+| `hit_dagger` / `hit_spear` / `hit_hammer` / `hit_mace` | Impact Sounds → impactSoft_medium / impactPunch_medium / impactWood_heavy / impactPunch_heavy |
+| `hit_weak` | Impact Sounds → impactPlate_medium |
+| `enemy_block` / `parried` / `player_block` | Impact Sounds → impactMetal_medium / impactMetal_heavy / impactPlate_heavy |
+| `player_hit` | Impact Sounds → impactPunch_heavy |
+| `counter` / `guard_break` | Impact Sounds → impactBell_heavy / impactGlass_heavy |
+| `dodge` / `telegraph` / `felled` | RPG Audio → cloth / drawKnife / bookClose |
+| `ui_tap` | Interface Sounds → click |
+
+## Tier 3 — audio (SFX wired above; music and mute button still open)
 
 - One ambient/combat music loop (60–90s, OGG + M4A, ≤1 MB each).
 - SFX: swipe ×2–3, blocked clang, perfect-counter chime, guard break,

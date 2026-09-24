@@ -5,6 +5,7 @@ import { PreloaderScene } from './scenes/PreloaderScene';
 import { HomeScene } from './scenes/HomeScene';
 import { BattleScene } from './scenes/BattleScene';
 import { RewardScene } from './scenes/RewardScene';
+import { installContactProbe } from './debug/contactProbe';
 
 /**
  * Fixed logical resolution of 1280x720, scaled to fit the web view while
@@ -33,4 +34,5 @@ document.addEventListener('DOMContentLoaded', () => {
   // Debug handle for local preview tooling (synthetic DOM events don't reach
   // Phaser's input manager reliably); harmless in the Reddit webview.
   (window as unknown as { __game?: Game }).__game = game;
+  installContactProbe(game);
 });

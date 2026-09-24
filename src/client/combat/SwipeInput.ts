@@ -10,6 +10,13 @@ export type SwipeInputOptions = {
   /** UI hit-test — gestures starting over UI controls are ignored. */
   isBlockedAt: (x: number, y: number) => boolean;
   onGesture: (gesture: GestureClassification) => void;
+  /**
+   * Every sampled path segment while the gesture is in flight. `inputTs` is
+   * the DOM event timestamp (performance.now() clock) for latency logging.
+   */
+  onSegment?: (a: GesturePoint, b: GesturePoint, inputTs: number) => void;
+  /** The gesture pointer lifted, before classification. */
+  onRelease?: (t: number) => void;
 };
 
 const SAMPLE_MIN_DISTANCE = 4;
@@ -52,14 +59,20 @@ export class SwipeInput {
       Math.hypot(pointer.x - last.x, pointer.y - last.y) < SAMPLE_MIN_DISTANCE
     )
       return;
-    this.points.push({ x: pointer.x, y: pointer.y, t: this.scene.time.now });
+    const point = { x: pointer.x, y: pointer.y, t: this.scene.time.now };
+    this.points.push(point);
+    this.options.onSegment?.(last, point, pointer.event?.timeStamp ?? performance.now());
   }
 
   private onUp(pointer: Phaser.Input.Pointer): void {
     if (pointer.id !== this.activePointerId) return;
     // Releasing the right (block) button must not end an in-flight swipe.
     if (pointer.leftButtonDown()) return;
-    this.points.push({ x: pointer.x, y: pointer.y, t: this.scene.time.now });
+    const last = this.points[this.points.length - 1];
+    const point = { x: pointer.x, y: pointer.y, t: this.scene.time.now };
+    this.points.push(point);
+    if (last) this.options.onSegment?.(last, point, pointer.event?.timeStamp ?? performance.now());
+    this.options.onRelease?.(point.t);
     const gesture = classifyGesture(this.points, GESTURE_TUNING);
     this.activePointerId = null;
     this.points = [];
