@@ -51,7 +51,7 @@ jobs:
           restore-keys: laya-hf-
       - name: Prepare Laya assets
         run: |
-          pip install 'laya-coreml==0.1.1'
+          pip install 'laya-coreml @ git+https://github.com/mizorewww/laya-coreml@4619e0483f07adf39068532e85b42ec2347edb83'
           python tools/laya/prepare.py --out ios/App/Laya --cache .laya-cache
           for v in fp16 w8; do
             xcrun coremlcompiler compile "ios/App/Laya/$v.mlpackage" ios/App/Laya/   # → $v.mlmodelc
