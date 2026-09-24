@@ -1,0 +1,46 @@
+# XcodeGen spec — the Xcode project is generated on the CI runner (no Mac needed locally).
+name: FallenRoadHaptics
+options:
+  bundleIdPrefix: io.github.nattentia
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    CODE_SIGNING_ALLOWED: "NO"
+    CODE_SIGNING_REQUIRED: "NO"
+    CODE_SIGN_IDENTITY: ""
+    DEVELOPMENT_TEAM: ""
+targets:
+  FallenRoadHaptics:
+    type: application
+    platform: iOS
+    sources:
+      - path: App/Sources
+      # Built web game (npm run build → dist/client), copied in by CI.
+      - path: App/web
+        type: folder
+        buildPhase: resources
+      # Laya prompts, embeddings, golden outputs and compiled .mlmodelc, made by CI.
+      - path: App/Laya
+        type: folder
+        buildPhase: resources
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: FR Haptics
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UIRequiresFullScreen: true
+        UIStatusBarHidden: true
+        UIViewControllerBasedStatusBarAppearance: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.nattentia.fallenroadhaptics

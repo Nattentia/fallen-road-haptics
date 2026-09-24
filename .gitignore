@@ -2,3 +2,10 @@ node_modules
 .DS_Store
 dist
 .env
+.laya-cache
+ios/App/web
+ios/App/Laya
+ios/App/Info.plist
+ios/build
+ios/*.xcodeproj
+out

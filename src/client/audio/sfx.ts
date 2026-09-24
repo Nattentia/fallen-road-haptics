@@ -1,7 +1,7 @@
 import * as Phaser from 'phaser';
 
 /**
- * Combat sound effects. Files live in public/assets/sfx as `<key>_<n>.ogg`
+ * Combat sound effects. Files live in public/assets/sfx as `<key>_<n>.ogg|.m4a`
  * (Kenney CC0 packs, see ASSETS.md). Each play picks a random variant and
  * nudges the pitch so repeated hits don't sound machine-gunned.
  */
@@ -41,8 +41,13 @@ export const queueSfxLoads = (
   for (const [key, def] of Object.entries(SFX) as [SfxKey, (typeof SFX)[SfxKey]][]) {
     for (let n = 1; n <= def.variants; n++) {
       const cacheKey = variantKey(key, n);
+      // Phaser picks the first format the browser can decode; iOS WebKit
+      // may lack Ogg Vorbis, so every sound also ships as AAC.
       if (!scene.cache.audio.exists(cacheKey))
-        scene.load.audio(cacheKey, assetUrl(`assets/sfx/${key}_${n}.ogg`));
+        scene.load.audio(cacheKey, [
+          assetUrl(`assets/sfx/${key}_${n}.ogg`),
+          assetUrl(`assets/sfx/${key}_${n}.m4a`),
+        ]);
     }
   }
 };

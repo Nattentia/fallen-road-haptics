@@ -1,0 +1,100 @@
+name: Build iOS app (unsigned IPA)
+
+# Builds the wrapper app on a macOS runner: web game + Laya assets + Swift app.
+# The unsigned IPA is published to the rolling "ios-latest" release; install it
+# with Sideloadly (it re-signs with your own Apple ID).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - 'src/**'
+      - 'tools/laya/**'
+      - 'package*.json'
+      - '.github/workflows/ios.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ios
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Build web game
+        run: |
+          npm ci
+          npm run build
+          rm -f dist/client/*.map
+          mkdir -p ios/App/web
+          cp -R dist/client/. ios/App/web/
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        with:
+          path: .laya-cache
+          key: laya-hf-${{ hashFiles('tools/laya/prepare.py') }}
+          restore-keys: laya-hf-
+      - name: Prepare Laya assets
+        run: |
+          pip install 'laya-coreml==0.1.1'
+          python tools/laya/prepare.py --out ios/App/Laya --cache .laya-cache
+          for v in fp16 w8; do
+            xcrun coremlcompiler compile "ios/App/Laya/$v.mlpackage" ios/App/Laya/   # → $v.mlmodelc
+            rm -rf "ios/App/Laya/$v.mlpackage"
+          done
+          ls -la ios/App/Laya
+          du -sh ios/App/Laya ios/App/web
+
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      - name: Build unsigned app
+        run: |
+          cd ios
+          xcodebuild -project FallenRoadHaptics.xcodeproj -scheme FallenRoadHaptics \
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build | tail -n 60
+          test -d build/Build/Products/Release-iphoneos/FallenRoadHaptics.app
+
+      - name: Package IPA
+        run: |
+          mkdir -p out/Payload
+          cp -R ios/build/Build/Products/Release-iphoneos/FallenRoadHaptics.app out/Payload/
+          cd out && zip -qry FallenRoadHaptics.ipa Payload && ls -la FallenRoadHaptics.ipa
+
+      - name: Publish to ios-latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes="Unsigned build of ${GITHUB_SHA::7}. Install with Sideloadly — see docs/IPHONE.md."
+          if gh release view ios-latest >/dev/null 2>&1; then
+            gh release edit ios-latest --notes "$notes" --prerelease
+          else
+            gh release create ios-latest --title "iOS app (latest build)" --notes "$notes" --prerelease --target "$GITHUB_SHA"
+          fi
+          gh release upload ios-latest out/FallenRoadHaptics.ipa --clobber
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FallenRoadHaptics-ipa
+          path: out/FallenRoadHaptics.ipa
+          retention-days: 7

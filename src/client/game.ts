@@ -6,6 +6,7 @@ import { HomeScene } from './scenes/HomeScene';
 import { BattleScene } from './scenes/BattleScene';
 import { RewardScene } from './scenes/RewardScene';
 import { installContactProbe } from './debug/contactProbe';
+import { installNativeBridge } from './haptics/nativeBridge';
 
 /**
  * Fixed logical resolution of 1280x720, scaled to fit the web view while
@@ -35,4 +36,5 @@ document.addEventListener('DOMContentLoaded', () => {
   // Phaser's input manager reliably); harmless in the Reddit webview.
   (window as unknown as { __game?: Game }).__game = game;
   installContactProbe(game);
+  installNativeBridge(game);
 });
