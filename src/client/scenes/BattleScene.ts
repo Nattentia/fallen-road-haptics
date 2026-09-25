@@ -10,6 +10,7 @@ import {
 } from '../../shared/api';
 import { PLAYER_BALANCE } from '../../shared/balance/player';
 import { playSfx } from '../audio/sfx';
+import { playBaseHaptic } from '../haptics/baseHaptics';
 import type { WeaponId } from '../../shared/balance/weapons';
 import {
   ENEMIES,
@@ -442,6 +443,7 @@ export class BattleScene extends Phaser.Scene {
     this.mode = 'travel';
     this.stats.foesFelled += 1;
     playSfx(this, 'felled');
+    playBaseHaptic(this, felled?.tier === 'boss' ? 'boss_kill' : 'enemy_kill');
     this.encounterNumber += 1;
     this.gainPlayerBurst('kill');
     this.healPlayer(HEAL_PER_KILL);
@@ -899,6 +901,7 @@ export class BattleScene extends Phaser.Scene {
       this.gainPlayerBurst(classifyHitBurstEvent(zoneInfo.weakPoint, gesture.heavy));
       view.playHitReaction(hitZone.id, gesture.heavy);
       playSfx(this, `hit_${weapon.id}`, { volume: gesture.heavy ? 1.2 : 1 });
+      playBaseHaptic(this, 'enemy_hit');
       if (zoneInfo.weakPoint) playSfx(this, 'hit_weak');
       spawnPaperFragments(this, zonePos.x, zonePos.y, gesture.heavy ? 10 : 6);
       this.hud.showFloatingText(
@@ -1225,6 +1228,7 @@ export class BattleScene extends Phaser.Scene {
     this.stats.damageTaken += amount;
     if (fullHit) {
       playSfx(this, 'player_hit');
+      playBaseHaptic(this, 'player_hit');
       damageVignette(this);
       this.cameras.main.shake(140, 0.006);
       this.hud.showFloatingText(420, 480, `-${amount}`, '#d94f3d');
@@ -1300,6 +1304,7 @@ export class BattleScene extends Phaser.Scene {
     );
     this.enemyView.playHitReaction(target?.id ?? 'torso', false);
     playSfx(this, `hit_${weaponId}`);
+    playBaseHaptic(this, 'enemy_hit');
     spawnPaperFragments(this, center.x, center.y, 5);
     this.hud.showFloatingText(center.x, center.y - 24, `-${damage}`, '#ffb347');
     this.cameras.main.shake(60, 0.003);

@@ -1,6 +1,7 @@
 import type { Game } from 'phaser';
 import { CONTACT_EVENT, type ContactSignal } from '../combat/contactEvents';
 import { SFX_EVENT, type SfxEvent } from '../audio/sfx';
+import { BASE_HAPTIC_EVENT, type BaseHapticEvent } from './baseHaptics';
 
 /**
  * Bridge to the iOS wrapper app (ios/). Inside the app, game signals are
@@ -55,6 +56,9 @@ export const installNativeBridge = (game: Game): boolean => {
   });
   game.events.on(SFX_EVENT, (e: SfxEvent) => {
     post({ type: 'sfx', key: e.key, volume: e.volume, t1: performance.now() });
+  });
+  game.events.on(BASE_HAPTIC_EVENT, (e: BaseHapticEvent) => {
+    post({ type: 'base', action: e.action, t1: performance.now() });
   });
   return true;
 };

@@ -7,8 +7,8 @@ import Foundation
 final class LatencyLog {
     struct Row {
         let seq: Int
-        let kind: String      // contact / sfx
-        let detail: String    // phase:zone or sfx key
+        let kind: String      // contact / sfx / base
+        let detail: String    // phase:zone, sfx key or base action
         let speed: Double
         let t0: Double?
         let t1: Double
@@ -54,13 +54,13 @@ final class LatencyLog {
 
     /// Short live summary for the overlay.
     func summary(hapticsOn: Bool) -> String {
-        let touches = rows.filter { $0.kind == "contact" && $0.haptic && $0.t0 != nil }
-        let sfx = rows.filter { $0.kind == "sfx" && $0.haptic }
+        let touches = rows.filter { $0.kind == "contact" && $0.t0 != nil }
+        let base = rows.filter { $0.kind == "base" && $0.haptic }
         return [
             "haptics \(hapticsOn ? "ON" : "OFF")  sync rtt \(Self.fmt(syncRtt))ms",
-            line("touch→haptic ", touches.map { $0.t3 - ($0.t0 ?? .nan) }),
+            line("touch→native ", touches.map { $0.t3 - ($0.t0 ?? .nan) }),
             line("bridge JS→Sw", rows.map { $0.t2 - $0.t1 }),
-            line("outcome→hap  ", sfx.map { $0.t3 - $0.t1 }),
+            line("event→base   ", base.map { $0.t3 - $0.t1 }),
         ].joined(separator: "\n")
     }
 

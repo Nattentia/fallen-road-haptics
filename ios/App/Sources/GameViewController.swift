@@ -70,25 +70,30 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
             let phase = body["phase"] as? String ?? ""
             let zone = body["zone"] as? String ?? ""
             let speed = (body["speed"] as? NSNumber)?.doubleValue ?? 0
-            switch phase {
-            case "enter": haptics.contactEnter(zone: zone, speed: speed)
-            case "inside": haptics.contactInside(speed: speed)
-            default: haptics.stopContact()
-            }
+            // Logged only: blade contact is input for the upscaler, not base vibration.
             let done = Clock.nowMs()
             log.add(.init(
                 seq: seq, kind: "contact", detail: "\(phase):\(zone)", speed: speed,
                 t0: (body["t0"] as? NSNumber)?.doubleValue,
                 t1: (body["t1"] as? NSNumber)?.doubleValue ?? .nan,
                 t2: log.toJs(received), t3: log.toJs(done),
-                haptic: haptics.enabled && phase != "exit", syncRtt: log.syncRtt
+                haptic: false, syncRtt: log.syncRtt
             ))
         case "sfx":
             let key = body["key"] as? String ?? ""
-            let issued = haptics.outcome(key: key)
             let done = Clock.nowMs()
             log.add(.init(
                 seq: seq, kind: "sfx", detail: key, speed: 0, t0: nil,
+                t1: (body["t1"] as? NSNumber)?.doubleValue ?? .nan,
+                t2: log.toJs(received), t3: log.toJs(done),
+                haptic: false, syncRtt: log.syncRtt
+            ))
+        case "base":
+            let action = body["action"] as? String ?? ""
+            let issued = haptics.base()
+            let done = Clock.nowMs()
+            log.add(.init(
+                seq: seq, kind: "base", detail: action, speed: 0, t0: nil,
                 t1: (body["t1"] as? NSNumber)?.doubleValue ?? .nan,
                 t2: log.toJs(received), t3: log.toJs(done),
                 haptic: issued, syncRtt: log.syncRtt
@@ -140,7 +145,6 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
 
     @objc private func toggleHaptics() {
         haptics.enabled.toggle()
-        if !haptics.enabled { haptics.stopContact() }
     }
 
     @objc private func exportLog() {
