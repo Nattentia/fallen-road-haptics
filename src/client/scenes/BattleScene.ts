@@ -11,6 +11,7 @@ import {
 import { PLAYER_BALANCE } from '../../shared/balance/player';
 import { playSfx } from '../audio/sfx';
 import { playBaseHaptic } from '../haptics/baseHaptics';
+import { FallenRoadSignals } from '../haptics/fallenRoadSignals';
 import type { WeaponId } from '../../shared/balance/weapons';
 import {
   ENEMIES,
@@ -170,6 +171,7 @@ export class BattleScene extends Phaser.Scene {
   private nextAttackReadyAt: number;
 
   private hitStopUntil: number;
+  private signals!: FallenRoadSignals;
   private burstActive: boolean;
   private secondWindUsed: boolean;
   private nextSpawnAt: number;
@@ -218,6 +220,7 @@ export class BattleScene extends Phaser.Scene {
     this.lastShieldPressAt = null;
     this.nextAttackReadyAt = 0;
     this.hitStopUntil = 0;
+    this.signals = new FallenRoadSignals(this);
     this.burstActive = false;
     this.secondWindUsed = false;
     this.runStartAt = this.carried?.runStartAt ?? this.time.now;
@@ -332,6 +335,14 @@ export class BattleScene extends Phaser.Scene {
       this.spawnEnemy();
     }
 
+    this.signals.gauges({
+      shield: this.playerGuard.current / Math.max(1, this.playerGuard.max),
+      health: this.playerHealth / PLAYER_BALANCE.maxHealth,
+      enemyGuard: this.enemyGuard.current / Math.max(1, this.enemyGuard.max),
+      enemyHealth: this.def ? this.enemyHealth / this.def.maxHealth : 0,
+      burst: this.playerBurst / PLAYER_BALANCE.burstMax,
+    });
+
     this.hud.update({
       playerHealth: this.playerHealth,
       playerMaxHealth: PLAYER_BALANCE.maxHealth,
@@ -383,6 +394,7 @@ export class BattleScene extends Phaser.Scene {
       {
         onTelegraphStart: (attack, impactAt) => {
           playSfx(this, 'telegraph');
+          this.signals.enemyWindUp(attack, impactAt);
           view.playTelegraph(
             Math.max(1, impactAt - this.time.now),
             PLAYER_BALANCE.counterWindowMs,
@@ -444,6 +456,7 @@ export class BattleScene extends Phaser.Scene {
     this.stats.foesFelled += 1;
     playSfx(this, 'felled');
     playBaseHaptic(this, felled?.tier === 'boss' ? 'boss_kill' : 'enemy_kill');
+    this.signals.enemyFelled(felled?.tier === 'boss');
     this.encounterNumber += 1;
     this.gainPlayerBurst('kill');
     this.healPlayer(HEAL_PER_KILL);
@@ -825,6 +838,11 @@ export class BattleScene extends Phaser.Scene {
   // ------------------------------------------------------------------
 
   private onGesture(gesture: GestureClassification): void {
+    this.resolveSwipe(gesture);
+    this.signals.swipeDone();
+  }
+
+  private resolveSwipe(gesture: GestureClassification): void {
     if (gesture.kind !== 'swipe') return;
     if (this.mode === 'over' || this.burstActive) return;
     const now = this.time.now;
@@ -856,6 +874,7 @@ export class BattleScene extends Phaser.Scene {
     this.tracker.recordAttack(gesture.direction, hitZone?.id ?? null, now);
 
     if (!hitZone) {
+      this.signals.strikeMissed();
       const note = brain.isDodging() ? 'DODGED' : 'miss';
       this.hud.showFloatingText(gesture.end.x, gesture.end.y, note, MUTED_TEXT);
       return;
@@ -884,6 +903,7 @@ export class BattleScene extends Phaser.Scene {
       view.playBlockedHit();
       playSfx(this, 'enemy_block');
       playBaseHaptic(this, 'enemy_block');
+      this.signals.strikeBlocked(weapon, hitZone.id, strike.damage);
       spawnPaperFragments(this, zonePos.x - 40, zonePos.y, 3, PAPER.guard);
       this.hud.showFloatingText(zonePos.x, zonePos.y - 20, 'BLOCKED', '#4f8fdd');
       this.applyEnemyGuardDamage(strike.guardDamage, now);
@@ -903,6 +923,7 @@ export class BattleScene extends Phaser.Scene {
       view.playHitReaction(hitZone.id, gesture.heavy);
       playSfx(this, `hit_${weapon.id}`, { volume: gesture.heavy ? 1.2 : 1 });
       playBaseHaptic(this, 'enemy_hit');
+      this.signals.strikeLanded(weapon, hitZone.id, gesture.heavy, zoneInfo.weakPoint, damage);
       if (zoneInfo.weakPoint) playSfx(this, 'hit_weak');
       spawnPaperFragments(this, zonePos.x, zonePos.y, gesture.heavy ? 10 : 6);
       this.hud.showFloatingText(
@@ -913,6 +934,7 @@ export class BattleScene extends Phaser.Scene {
       );
       if (zoneInfo.weakPoint || gesture.heavy) {
         this.hitStopUntil = now + 70;
+        this.signals.hitStop(this.hitStopUntil, 0.05);
         this.cameras.main.shake(90, 0.004);
       }
 
@@ -995,6 +1017,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private emitContacts(events: readonly ContactEvent[], inputTs: number): void {
+    this.signals.contacts(events, weaponForRun(this.run));
     for (const event of events) {
       const signal: ContactSignal = { ...event, inputTs, emitTs: performance.now() };
       this.game.events.emit(CONTACT_EVENT, signal);
@@ -1017,6 +1040,7 @@ export class BattleScene extends Phaser.Scene {
     this.enemyView?.playGuardBreak();
     playSfx(this, 'guard_break');
     playBaseHaptic(this, 'enemy_guard_break');
+    if (this.def) this.signals.enemyGuardBroken(this.time.now + this.def.guardBreakDurationMs);
     this.hud.showMessage('ENEMY GUARD BROKEN!', '#d94f3d');
     const torso = this.enemyView?.getHitZones().find((z) => z.id === 'torso');
     if (torso) spawnPaperFragments(this, torso.shape.x, torso.shape.y, 14);
@@ -1040,6 +1064,7 @@ export class BattleScene extends Phaser.Scene {
     this.enemyView?.playParry();
     playSfx(this, 'parried');
     playBaseHaptic(this, 'parried');
+    this.signals.parried();
     this.hud.showMessage('PARRIED!', '#d94f3d', 32);
     this.cameras.main.shake(90, 0.004);
     // The riposte itself arrives via the normal telegraph -> impact flow,
@@ -1082,6 +1107,11 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private onEnemyAttackImpact(attack: EnemyAttackDefinition): void {
+    this.resolveEnemyAttack(attack);
+    this.signals.attackDone();
+  }
+
+  private resolveEnemyAttack(attack: EnemyAttackDefinition): void {
     if (this.mode !== 'fight') return;
     const now = this.time.now;
 
@@ -1094,6 +1124,8 @@ export class BattleScene extends Phaser.Scene {
         PLAYER_BALANCE.counterWindowMs
       );
       this.gainPlayerBurst(perfectDodge ? 'perfectCounter' : 'evade');
+      if (perfectDodge) this.signals.playerCountered(attack, true);
+      else this.signals.playerEvaded(attack);
       this.rig.evadeFlash();
       if (perfectDodge) {
         this.stats.dodgeCounters += 1;
@@ -1133,6 +1165,7 @@ export class BattleScene extends Phaser.Scene {
     switch (outcome) {
       case 'counter': {
         this.stats.perfectCounters += 1;
+        this.signals.playerCountered(attack, false);
         playSfx(this, 'counter');
         playBaseHaptic(this, 'counter');
         this.tracker.recordCounter(now);
@@ -1153,6 +1186,7 @@ export class BattleScene extends Phaser.Scene {
         break;
       }
       case 'block': {
+        this.signals.playerBlocked(attack);
         const leak = blockedDamage(
           attack.damage,
           PLAYER_BALANCE.blockDamageReduction *
@@ -1186,6 +1220,7 @@ export class BattleScene extends Phaser.Scene {
         break;
       }
       case 'hit': {
+        this.signals.playerHit(attack);
         this.damagePlayer(attack.damage, true);
         break;
       }
@@ -1198,6 +1233,7 @@ export class BattleScene extends Phaser.Scene {
     this.rig.breakShield();
     playSfx(this, 'guard_break');
     playBaseHaptic(this, 'player_guard_break');
+    this.signals.playerShieldBroken();
     this.hud.showMessage('SHIELD DESTROYED!', '#d94f3d');
     spawnPaperFragments(this, 300, 640, 14, PAPER.guard);
     this.cameras.main.shake(160, 0.008);
@@ -1267,6 +1303,7 @@ export class BattleScene extends Phaser.Scene {
     this.brain.notifyBurstLock(now, totalMs + 200);
     this.hud.showMessage(burst.name.toUpperCase(), '#ffb347', 32);
     playBaseHaptic(this, 'burst_start');
+    this.signals.burstStart(weapon, now + 200);
     this.cameras.main.flash(120, 40, 40, 80);
 
     for (let i = 0; i < burst.hits; i++) {
@@ -1313,6 +1350,11 @@ export class BattleScene extends Phaser.Scene {
     this.enemyView.playHitReaction(target?.id ?? 'torso', false);
     playSfx(this, `hit_${weaponId}`);
     playBaseHaptic(this, 'enemy_hit');
+    this.signals.burstHit(
+      weaponForRun({ ...this.run, weaponId }),
+      damage,
+      index === burst.hits - 1 && this.enemyHealth > 0
+    );
     spawnPaperFragments(this, center.x, center.y, 5);
     this.hud.showFloatingText(center.x, center.y - 24, `-${damage}`, '#ffb347');
     this.cameras.main.shake(60, 0.003);
@@ -1329,6 +1371,7 @@ export class BattleScene extends Phaser.Scene {
     this.mode = 'over';
     this.holdingBlock = false;
     playBaseHaptic(this, 'player_death');
+    this.signals.playerDied();
     this.hud.showMessage(
       this.stage === 'rival' ? 'THE ECHO OVERCOMES YOU' : 'YOU HAVE FALLEN',
       '#d94f3d',

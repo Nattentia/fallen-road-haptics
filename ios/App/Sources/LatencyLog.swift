@@ -7,8 +7,8 @@ import Foundation
 final class LatencyLog {
     struct Row {
         let seq: Int
-        let kind: String      // contact / sfx / base
-        let detail: String    // phase:zone, sfx key or base action
+        let kind: String      // contact / sfx / base / signal
+        let detail: String    // phase:zone, sfx key, base action or kind:what:chain step
         let speed: Double
         let t0: Double?
         let t1: Double

@@ -88,6 +88,21 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
                 t2: log.toJs(received), t3: log.toJs(done),
                 haptic: false, syncRtt: log.syncRtt
             ))
+        case "signal":
+            // Upscaler input. Logged only until the upscaler consumes it.
+            let signal = body["signal"] as? [String: Any] ?? [:]
+            let kind = signal["kind"] as? String ?? "?"
+            let chain = signal["chain"] as? [String: Any]
+            let step = chain.flatMap { $0["step"] as? String } ?? "-"
+            let what = signal["outcome"] as? String ?? signal["phase"] as? String
+                ?? signal["clock"] as? String ?? signal["id"] as? String ?? ""
+            let done = Clock.nowMs()
+            log.add(.init(
+                seq: seq, kind: "signal", detail: "\(kind):\(what):\(step)", speed: 0, t0: nil,
+                t1: (body["t1"] as? NSNumber)?.doubleValue ?? .nan,
+                t2: log.toJs(received), t3: log.toJs(done),
+                haptic: false, syncRtt: log.syncRtt
+            ))
         case "base":
             let action = body["action"] as? String ?? ""
             let issued = haptics.base()

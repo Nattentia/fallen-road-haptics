@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    include: ['src/shared/**/*.test.ts'],
+    include: ['src/shared/**/*.test.ts', 'src/client/haptics/**/*.test.ts'],
     environment: 'node',
   },
 });
