@@ -883,6 +883,7 @@ export class BattleScene extends Phaser.Scene {
       this.stats.damageDealt += chip;
       view.playBlockedHit();
       playSfx(this, 'enemy_block');
+      playBaseHaptic(this, 'enemy_block');
       spawnPaperFragments(this, zonePos.x - 40, zonePos.y, 3, PAPER.guard);
       this.hud.showFloatingText(zonePos.x, zonePos.y - 20, 'BLOCKED', '#4f8fdd');
       this.applyEnemyGuardDamage(strike.guardDamage, now);
@@ -1015,6 +1016,7 @@ export class BattleScene extends Phaser.Scene {
     this.enemyGuardBrokenState = true;
     this.enemyView?.playGuardBreak();
     playSfx(this, 'guard_break');
+    playBaseHaptic(this, 'enemy_guard_break');
     this.hud.showMessage('ENEMY GUARD BROKEN!', '#d94f3d');
     const torso = this.enemyView?.getHitZones().find((z) => z.id === 'torso');
     if (torso) spawnPaperFragments(this, torso.shape.x, torso.shape.y, 14);
@@ -1037,6 +1039,7 @@ export class BattleScene extends Phaser.Scene {
   private onParried(): void {
     this.enemyView?.playParry();
     playSfx(this, 'parried');
+    playBaseHaptic(this, 'parried');
     this.hud.showMessage('PARRIED!', '#d94f3d', 32);
     this.cameras.main.shake(90, 0.004);
     // The riposte itself arrives via the normal telegraph -> impact flow,
@@ -1095,6 +1098,7 @@ export class BattleScene extends Phaser.Scene {
       if (perfectDodge) {
         this.stats.dodgeCounters += 1;
         playSfx(this, 'counter');
+        playBaseHaptic(this, 'counter');
         this.tracker.recordCounter(now);
         this.rig.counterFlash();
         this.hud.showMessage('DODGE COUNTER!', '#7fc9a0', 30);
@@ -1130,6 +1134,7 @@ export class BattleScene extends Phaser.Scene {
       case 'counter': {
         this.stats.perfectCounters += 1;
         playSfx(this, 'counter');
+        playBaseHaptic(this, 'counter');
         this.tracker.recordCounter(now);
         this.gainPlayerBurst('perfectCounter');
         this.rig.counterFlash();
@@ -1159,6 +1164,7 @@ export class BattleScene extends Phaser.Scene {
         );
         this.gainPlayerBurst('normalBlock');
         playSfx(this, 'player_block');
+        playBaseHaptic(this, 'player_block');
         this.cameras.main.shake(70, 0.003);
         spawnPaperFragments(this, 300, 620, 4, PAPER.guard);
         // Shield durability gets chewed up quickly: most foes shatter it in 2-3 blocks.
@@ -1191,6 +1197,7 @@ export class BattleScene extends Phaser.Scene {
     this.lastShieldPressAt = null;
     this.rig.breakShield();
     playSfx(this, 'guard_break');
+    playBaseHaptic(this, 'player_guard_break');
     this.hud.showMessage('SHIELD DESTROYED!', '#d94f3d');
     spawnPaperFragments(this, 300, 640, 14, PAPER.guard);
     this.cameras.main.shake(160, 0.008);
@@ -1259,6 +1266,7 @@ export class BattleScene extends Phaser.Scene {
     const totalMs = 200 + burst.hits * burst.hitIntervalMs;
     this.brain.notifyBurstLock(now, totalMs + 200);
     this.hud.showMessage(burst.name.toUpperCase(), '#ffb347', 32);
+    playBaseHaptic(this, 'burst_start');
     this.cameras.main.flash(120, 40, 40, 80);
 
     for (let i = 0; i < burst.hits; i++) {
@@ -1320,6 +1328,7 @@ export class BattleScene extends Phaser.Scene {
     if (this.mode === 'over') return;
     this.mode = 'over';
     this.holdingBlock = false;
+    playBaseHaptic(this, 'player_death');
     this.hud.showMessage(
       this.stage === 'rival' ? 'THE ECHO OVERCOMES YOU' : 'YOU HAVE FALLEN',
       '#d94f3d',

@@ -7,7 +7,18 @@ import type * as Phaser from 'phaser';
  * The action name travels with it so the native side can log it.
  */
 export type BaseHapticAction =
-  'player_hit' | 'enemy_hit' | 'enemy_kill' | 'boss_kill';
+  | 'player_hit' // an enemy attack lands in full
+  | 'player_block' // the shield takes an enemy attack
+  | 'player_guard_break' // the shield is destroyed
+  | 'player_death'
+  | 'enemy_hit' // a strike or burst hit lands
+  | 'enemy_block' // the enemy guards a strike
+  | 'parried' // the enemy's counter stance catches a strike
+  | 'enemy_guard_break'
+  | 'counter' // perfect block or perfect dodge
+  | 'burst_start'
+  | 'enemy_kill'
+  | 'boss_kill';
 
 /** Fired on `game.events` for every base vibration — the haptics tap point. */
 export const BASE_HAPTIC_EVENT = 'baseHaptic';

@@ -1,7 +1,7 @@
 import CoreHaptics
 
 /// Plays the game's base vibration: one plain buzz, identical for every
-/// action (player hit, enemy hit, enemy kill, boss kill). It is what a
+/// combat action the game reports (see baseHaptics.ts). It is what a
 /// typical mobile game ships and what any vibration motor could render, so
 /// it carries no sharpness change, texture or layering. The haptic upscaler
 /// will add its layer on top of it.
