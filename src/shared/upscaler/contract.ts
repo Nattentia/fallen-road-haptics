@@ -8,6 +8,8 @@
  * (`performance.now()`); the native player converts them to its own clock.
  */
 
+import type { Signal } from '../haptics/signals';
+
 // ---------------------------------------------------------------------------
 // Device limits (Apple documentation values; confirmed on device in S1)
 // ---------------------------------------------------------------------------
@@ -165,6 +167,34 @@ export type SoundFeatures = {
   loudness: CurvePoint[];
   /** How noise-like the sound is overall, the source of grain density. */
   noisiness: number;
+};
+
+// ---------------------------------------------------------------------------
+// The upscaler as the bridge sees it
+// ---------------------------------------------------------------------------
+
+export type UpscalerInput = {
+  /** JS clock now. */
+  now: number;
+  /** Add to a game time (`t`, `at`, `until`) to get JS clock time. */
+  gameToJs: number;
+  /** Whether the game played the base vibration this signal names. */
+  paired: boolean;
+};
+
+export type UpscalerStep = {
+  /** Gain for the base vibration paired with the signal (1 when unpaired). */
+  baseGain: number;
+  commands: Command[];
+  /** JS time to be woken at even if no signal arrives. */
+  wakeAt?: number;
+};
+
+export type UpscalerEngine = {
+  define(bases: readonly BaseVibration[]): Command[];
+  consume(signal: Signal, input: UpscalerInput): UpscalerStep;
+  hint(hint: Hint, now: number): UpscalerStep;
+  wake(now: number): UpscalerStep;
 };
 
 // ---------------------------------------------------------------------------

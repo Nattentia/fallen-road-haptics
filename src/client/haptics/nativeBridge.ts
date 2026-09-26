@@ -4,6 +4,7 @@ import { SFX_EVENT, type SfxEvent } from '../audio/sfx';
 import { BASE_HAPTIC_EVENT, type BaseHapticEvent } from './baseHaptics';
 import { SIGNAL_EVENT } from './signalBus';
 import type { Signal } from '../../shared/haptics/signals';
+import type { Command } from '../../shared/upscaler/contract';
 
 /**
  * Bridge to the iOS wrapper app (ios/). Inside the app, game signals are
@@ -20,17 +21,25 @@ type NativeWindow = Window & {
 
 const SYNC_INTERVAL_MS = 2000;
 
-export const installNativeBridge = (game: Game): boolean => {
-  const w = window as NativeWindow;
-  const native = w.webkit?.messageHandlers?.hs;
+let seq = 0;
+
+/** Posts to the app, or returns false in a plain browser. */
+export const postNative = (message: Record<string, unknown>): boolean => {
+  const native = (window as NativeWindow).webkit?.messageHandlers?.hs;
   if (!native) return false;
+  seq += 1;
+  native.postMessage({ seq, ...message });
+  return true;
+};
 
-  let seq = 0;
-  const post = (message: Record<string, unknown>) => {
-    seq += 1;
-    native.postMessage({ seq, ...message });
-  };
+/** Sends one batch of upscaler commands to the native player. */
+export const sendCommands = (commands: Command[]): void => {
+  postNative({ type: 'upscaler', commands, t1: performance.now() });
+};
 
+/** Starts the clock sync the native side needs to place commands in time. */
+const startClockSync = (post: (message: Record<string, unknown>) => void) => {
+  const w = window as NativeWindow;
   // Clock sync: keep the estimate from the lowest round trip seen recently.
   let best: { rtt: number; offset: number; at: number } | null = null;
   w.__hsPong = (sentAt, swiftMs) => {
@@ -45,6 +54,24 @@ export const installNativeBridge = (game: Game): boolean => {
   const ping = () => post({ type: 'ping', t: performance.now() });
   ping();
   setInterval(ping, SYNC_INTERVAL_MS);
+};
+
+let syncing = false;
+
+/** Clock sync on its own, for pages without the game (the Lab). */
+export const installClockSync = (): boolean => {
+  if (syncing) return true;
+  const ok = postNative({ type: 'hello' });
+  if (ok) {
+    syncing = true;
+    startClockSync(postNative);
+  }
+  return ok;
+};
+
+export const installNativeBridge = (game: Game): boolean => {
+  if (!installClockSync()) return false;
+  const post = postNative;
 
   game.events.on(CONTACT_EVENT, (s: ContactSignal) => {
     post({
