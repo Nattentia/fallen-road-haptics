@@ -161,6 +161,23 @@ export class Mixer {
     if (k < 1) layer = layer.map((s) => scaleContinuous(s, k));
 
     // 3. Ducking: clearly more important moments push others back.
+    const out = this.duck(voice, importance, now + MIX.duckDelayMs);
+
+    for (const s of layer) this.active.push({ voice, importance, score: s });
+    return { baseGain, scores: layer, others: out };
+  }
+
+  /**
+   * Pushes back, from `from`, every other voice clearly less important than
+   * `importance` (to `gain` of its strength). Returns the commands.
+   */
+  duck(
+    voice: string,
+    importance: number,
+    from: number,
+    gain: number = MIX.duckGain
+  ): Command[] {
+    this.prune(from);
     const out: Command[] = [];
     const ducked = new Set<string>();
     for (const a of this.active) {
@@ -169,7 +186,6 @@ export class Mixer {
       ducked.add(a.voice);
     }
     for (const v of ducked) {
-      const from = now + MIX.duckDelayMs;
       const remainders = this.active
         .filter((a) => a.voice === v)
         .map((a) => {
@@ -178,7 +194,7 @@ export class Mixer {
             ...a,
             score: scaleAll(
               clipScore(a.score, from, `duck#${this.seq}`),
-              MIX.duckGain
+              gain
             ),
           };
         })
@@ -191,8 +207,6 @@ export class Mixer {
       // Ducked voices stay ducked; they no longer compete for importance.
       this.active.push(...remainders.map((r) => ({ ...r, importance: 0 })));
     }
-
-    for (const s of layer) this.active.push({ voice, importance, score: s });
-    return { baseGain, scores: layer, others: out };
+    return out;
   }
 }

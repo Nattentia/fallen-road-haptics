@@ -17,6 +17,7 @@ import type {
   UpscalerStep,
 } from './contract';
 import { Gauges, type GaugeMoment } from './gauges';
+import { ANTICIPATION, tension } from './anticipation';
 import { resolveMaterial } from './material';
 import { resolveTexture, textureOfMaterial } from './texture';
 import { Mixer } from './mixer';
@@ -81,6 +82,8 @@ export class HapticUpscaler implements UpscalerEngine {
   private readonly textures = new Map<string, Texture>();
   /** Expected moments by voice, kept for stage 6 (prepared decisions). */
   readonly expected = new Map<string, { at: number; importance: number }>();
+  /** Rests due before announced moments, by action voice (6-2). */
+  private readonly rests = new Map<string, { at: number; importance: number }>();
   private readonly sounds = new Map<string, SoundFeatures>();
   private seq = 0;
 
@@ -112,8 +115,7 @@ export class HapticUpscaler implements UpscalerEngine {
         step = { baseGain: 1, commands: this.gauge(signal, input.now) };
         break;
       case 'clock':
-        this.clock(signal, input);
-        step = { baseGain: 1, commands: [] };
+        step = { baseGain: 1, commands: this.clock(signal, input) };
         break;
     }
     return this.withWake(step);
@@ -154,6 +156,13 @@ export class HapticUpscaler implements UpscalerEngine {
     for (const t of this.textures.values())
       if (now >= t.scheduledUntil - TIMING.textureRenewLeadMs)
         commands.push(...this.renewTexture(t, now));
+    for (const [voice, r] of this.rests)
+      if (now >= r.at) {
+        this.rests.delete(voice);
+        commands.push(
+          ...this.mixer.duck(voice, r.importance, r.at, ANTICIPATION.restGain)
+        );
+      }
     return this.withWake({ baseGain: 1, commands });
   }
 
@@ -180,10 +189,12 @@ export class HapticUpscaler implements UpscalerEngine {
       this.chains.delete(voice);
       this.recent.delete(voice);
       this.hints.delete(voice);
+      this.forgetExpected(voice);
       return { baseGain: 1, commands };
     }
 
     const closing = step === 'resolve' || step === 'end';
+    if (closing) this.forgetExpected(voice);
     const sounding = this.mixer.sounding(voice, now).length > 0;
     if (closing)
       commands.push(...this.closeStreams(voice, now, TIMING.streamFadeMs));
@@ -464,12 +475,38 @@ export class HapticUpscaler implements UpscalerEngine {
     return [...placed.others, ...this.play(voice, placed.scores)];
   }
 
-  private clock(signal: ClockSignal, input: UpscalerInput): void {
-    if (signal.clock === 'expect' && signal.chain)
-      this.expected.set(signal.chain.id, {
-        at: signal.at + input.gameToJs,
-        importance: signal.importance,
-      });
+  private clock(signal: ClockSignal, input: UpscalerInput): Command[] {
+    if (signal.clock !== 'expect' || !signal.chain) return [];
+    const voice = signal.chain.id;
+    const at = signal.at + input.gameToJs;
+    this.expected.set(voice, { at, importance: signal.importance });
+    return this.anticipate(voice, at, signal.importance, input.now);
+  }
+
+  /**
+   * Tension grains until just before an announced moment, then a rest in
+   * which lighter voices are pushed back. Nothing waits on this: the result
+   * plays when it arrives and replaces the tension (6-2).
+   */
+  private anticipate(
+    voice: string,
+    at: number,
+    importance: number,
+    now: number
+  ): Command[] {
+    if (importance < ANTICIPATION.minImportance || at <= now) return [];
+    const restAt = Math.max(now, at - ANTICIPATION.restMs);
+    this.rests.set(voice, { at: restAt, importance });
+    const shape = tension(restAt - now, importance);
+    if (shape.events.length === 0) return [];
+    const score = this.toScore(shape, voice, now, { kind: 'rule' });
+    this.mixer.track(voice, importance, score);
+    return this.play(voice, [score]);
+  }
+
+  private forgetExpected(voice: string): void {
+    this.expected.delete(voice);
+    this.rests.delete(voice);
   }
 
   // -------------------------------------------------------------------------
@@ -528,6 +565,7 @@ export class HapticUpscaler implements UpscalerEngine {
       ...[...this.textures.values()].map(
         (t) => t.scheduledUntil - TIMING.textureRenewLeadMs
       ),
+      ...[...this.rests.values()].map((r) => r.at),
     ].filter((t): t is number => t !== undefined);
     return times.length > 0 ? { ...step, wakeAt: Math.min(...times) } : step;
   }
@@ -546,7 +584,7 @@ export class HapticUpscaler implements UpscalerEngine {
       ) {
         this.chains.delete(voice);
         this.hints.delete(voice);
-        this.expected.delete(voice);
+        this.forgetExpected(voice);
       }
   }
 }
