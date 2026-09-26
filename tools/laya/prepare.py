@@ -6,6 +6,9 @@ phone: embedding lookup, the Core ML encoder body, and answer decoding.
 
 Outputs (ios/App/Laya/):
   prompts.json        questions, states and pre-tokenized items (compact ids)
+  live.json           live-question prefixes and pre-tokenized state phrases
+                      (compact ids), proven here to join exactly (pieces.py)
+  golden-live-<variant>.json  reference answers for sample live states
   embed.f16           float16 rows for every token id the items use
   type_emb.f16        float16 question-type embeddings (3 x hidden)
   golden-<variant>.json  reference probabilities from the Python runtime
@@ -15,7 +18,9 @@ Outputs (ios/App/Laya/):
 import argparse
 import itertools
 import json
+import random
 import shutil
+import sys
 import time
 from pathlib import Path
 
@@ -24,7 +29,10 @@ from huggingface_hub import snapshot_download
 from safetensors import safe_open
 
 import laya_coreml as laya
-from laya_coreml.common import temp_bucket
+from laya_coreml.common import build_prefix, build_sequence, temp_bucket
+
+sys.path.insert(0, str(Path(__file__).parent))
+import pieces  # noqa: E402
 
 VARIANTS = {
     "fp16": "aac6fef/laya-multilingual-coreml-ane",
@@ -70,6 +78,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", default="ios/App/Laya")
     parser.add_argument("--cache", default=".laya-cache")
+    parser.add_argument("--vocabulary", default=str(Path(__file__).parent / "vocabulary.json"))
     args = parser.parse_args()
     out, cache = Path(args.out), Path(args.cache)
     out.mkdir(parents=True, exist_ok=True)
@@ -104,6 +113,29 @@ def main():
             row.append({"ids": item["ids"], "markers": item["markers"], "qtype": qt, "scale": scale})
             used.update(item["ids"])
         items.append(row)
+
+    # Live questions: prefixes whole, state phrases one by one, joined on the
+    # phone. verify() stops the build if joining would differ from the real
+    # tokenizer anywhere.
+    vocab = json.loads(Path(args.vocabulary).read_text(encoding="utf-8"))
+    live_defs = {
+        q["id"]: {"type": q["type"], "instructions": q["instructions"], "criteria": q["criteria"]}
+        for q in vocab["questions"]
+    }
+    live_questions = [
+        {"id": qid, "internal": ref._to_internal(d)} for qid, d in live_defs.items()
+    ]
+    head_max_len = ref.cfg.get("head_max_len", 192)
+    piece_ids, prefixes = pieces.verify(
+        ref.tok, vocab["pieces"], live_questions, build_prefix, build_sequence,
+        max_len=max_len, head_max_len=head_max_len,
+    )
+    for prefix, _ in prefixes.values():
+        used.update(prefix)
+    for ids in piece_ids.values():
+        used.update(ids)
+    used.add(ref.tok.sep_token_id)
+    print(f"live: {len(piece_ids)} phrases verified, {len(prefixes)} questions")
 
     # Compact embedding table: only rows the fixed prompts can reach.
     vocab = sorted(used)
@@ -148,6 +180,37 @@ def main():
     }
     (out / "prompts.json").write_text(json.dumps(prompts, separators=(",", ":")))
 
+    live = {
+        "max_length": max_len,
+        "pad": compact[ref.tok.pad_token_id],
+        "sep": compact[ref.tok.sep_token_id],
+        "questions": [],
+        "pieces": {p: [compact[t] for t in ids] for p, ids in piece_ids.items()},
+    }
+    for q in live_questions:
+        prefix, markers = prefixes[q["id"]]
+        qt = {"choice": 0, "score": 1, "noul": 2}[q["internal"]["t"]]
+        k = len(markers)
+        live["questions"].append({
+            "id": q["id"],
+            "qtype": qt,
+            "scale": ref.temperature_by_options.get(temp_bucket(qt, k), ref.temperature[qt]),
+            "prefix": [compact[t] for t in prefix],
+            "markers": markers,
+            "labels": live_defs[q["id"]]["criteria"],
+        })
+    (out / "live.json").write_text(json.dumps(live, separators=(",", ":")))
+
+    # Sample live states with reference answers, for the on-device parity check.
+    rng = random.Random(11)
+    live_states = [
+        pieces.fit(
+            max((pf for pf, _ in prefixes.values()), key=len), piece_ids,
+            [rng.choice(vocab["pieces"]) for _ in range(rng.randint(3, 8))], max_len,
+        )
+        for _ in range(24)
+    ]
+
     for name, agent in agents.items():
         golden, started = [], time.perf_counter()
         for state in states:
@@ -159,6 +222,17 @@ def main():
         (out / f"golden-{name}.json").write_text(
             json.dumps({"compute_units": agent.compute_units, "probabilities": golden})
         )
+        live_golden = [
+            {
+                "phrases": st,
+                "probabilities": {
+                    qid: [float(v) for v in a["probabilities"].values()]
+                    for qid, a in agent.predict(" ".join(st), live_defs)["answers"].items()
+                },
+            }
+            for st in live_states
+        ]
+        (out / f"golden-live-{name}.json").write_text(json.dumps(live_golden))
         shutil.copytree(bundles[name] / "model.mlpackage", out / f"{name}.mlpackage", dirs_exist_ok=True)
         print(f"{name}: {len(states) * len(QUESTIONS)} golden decisions in {elapsed:.1f}s")
 
