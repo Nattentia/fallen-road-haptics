@@ -9,3 +9,4 @@ ios/App/Info.plist
 ios/build
 ios/*.xcodeproj
 out
+out/
