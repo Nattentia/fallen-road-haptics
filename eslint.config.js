@@ -66,4 +66,32 @@ export default defineConfig([
     plugins: { js },
     extends: ['js/recommended'],
   },
+  {
+    // The haptic upscaler body reads genre-agnostic signals only; it must not
+    // depend on any game's code, data or engine.
+    files: ['src/shared/upscaler/**/*.ts', 'src/shared/haptics/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '**/balance/**',
+                '**/combat/**',
+                '**/run/**',
+                '**/client/**',
+                '**/server/**',
+                '**/api',
+                'phaser',
+                'phaser/**',
+                '@devvit/**',
+              ],
+              message: 'The upscaler body must not depend on a game.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 ]);
