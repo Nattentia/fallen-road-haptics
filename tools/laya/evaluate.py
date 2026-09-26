@@ -249,7 +249,13 @@ def main():
 
     def ask(text, questions):
         answers = agent.predict(text, questions)["answers"]
-        return {qid: [float(v) for v in a["probabilities"].values()] for qid, a in answers.items()}
+        # choice: {"probabilities": {label: p}}; noul: {"noul": P(true)}
+        return {
+            qid: [float(v) for v in a["probabilities"].values()]
+            if "probabilities" in a
+            else [1 - float(a["noul"]), float(a["noul"])]
+            for qid, a in answers.items()
+        }
 
     vocab = json.loads((HERE / "vocabulary.json").read_text(encoding="utf-8"))
     validation = json.loads((HERE / "validation.json").read_text(encoding="utf-8"))
