@@ -24,31 +24,52 @@ const hasFfmpeg = (() => {
 const decode = (file) => {
   const out = execFileSync(
     'ffmpeg',
-    ['-v', 'quiet', '-i', `${DIR}/${file}`, '-f', 'f32le', '-ac', '1', '-ar', String(RATE), '-'],
+    [
+      '-v',
+      'quiet',
+      '-i',
+      `${DIR}/${file}`,
+      '-f',
+      'f32le',
+      '-ac',
+      '1',
+      '-ar',
+      String(RATE),
+      '-',
+    ],
     { maxBuffer: 64 * 1024 * 1024 }
   );
   return new Float32Array(out.buffer, out.byteOffset, out.byteLength / 4);
 };
 
-const mean = (curve) => curve.reduce((s, p) => s + p.value, 0) / Math.max(1, curve.length);
+const mean = (curve) =>
+  curve.reduce((s, p) => s + p.value, 0) / Math.max(1, curve.length);
 
 describe.runIf(hasFfmpeg)('T3: the game sounds', () => {
-  const files = readdirSync(DIR).filter((f) => f.endsWith('.ogg')).sort();
-  const rows = files.map((file) => {
-    const samples = decode(file);
-    const started = performance.now();
-    const f = analyzeSound(samples, RATE);
-    return {
-      file,
-      key: file.replace(/_\d+\.ogg$/, ''),
-      ms: performance.now() - started,
-      durationMs: f.durationMs,
-      brightness: mean(f.brightness),
-      noisiness: f.noisiness,
-    };
-  });
+  // Decoding happens in the tests, not while collecting them, so the ffmpeg
+  // guard above really skips it.
+  let cached = null;
+  const loadRows = () => (cached ??= analyseAll());
+  const analyseAll = () =>
+    readdirSync(DIR)
+      .filter((f) => f.endsWith('.ogg'))
+      .sort()
+      .map((file) => {
+        const samples = decode(file);
+        const started = performance.now();
+        const f = analyzeSound(samples, RATE);
+        return {
+          file,
+          key: file.replace(/_\d+\.ogg$/, ''),
+          ms: performance.now() - started,
+          durationMs: f.durationMs,
+          brightness: mean(f.brightness),
+          noisiness: f.noisiness,
+        };
+      });
 
   it('analyses each sound quickly enough to run at load', () => {
+    const rows = loadRows();
     if (process.env.T3_REPORT)
       console.table(
         rows.map((r) => ({
@@ -65,11 +86,16 @@ describe.runIf(hasFfmpeg)('T3: the game sounds', () => {
   });
 
   it('gives different sounds different features', () => {
+    const rows = loadRows();
     const keys = [...new Set(rows.map((r) => r.key))];
     const centre = (k) => {
       const rs = rows.filter((r) => r.key === k);
       const avg = (f) => rs.reduce((s, r) => s + f(r), 0) / rs.length;
-      return [avg((r) => r.brightness), avg((r) => r.noisiness), avg((r) => Math.min(1, r.durationMs / 800))];
+      return [
+        avg((r) => r.brightness),
+        avg((r) => r.noisiness),
+        avg((r) => Math.min(1, r.durationMs / 800)),
+      ];
     };
     const c = new Map(keys.map((k) => [k, centre(k)]));
     let apart = 0;
