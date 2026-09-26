@@ -27,6 +27,7 @@ const fakeEngine = () => {
   const seen: { signal: Signal; input: UpscalerInput }[] = [];
   const hints: Hint[] = [];
   const wakes: number[] = [];
+  const soundIds: string[] = [];
   let nextWake: number | undefined;
   const step = (commands: Command[], gain = 1): UpscalerStep => ({
     baseGain: gain,
@@ -35,6 +36,9 @@ const fakeEngine = () => {
   });
   const engine: UpscalerEngine = {
     define: (bases) => bases.map((base) => ({ op: 'defineBase', base })),
+    defineSounds: (sounds) => {
+      soundIds.push(...Object.keys(sounds));
+    },
     consume: (signal, input) => {
       seen.push({ signal, input });
       return step(
@@ -56,6 +60,7 @@ const fakeEngine = () => {
     seen,
     hints,
     wakes,
+    soundIds,
     wakeAt: (t: number | undefined) => {
       nextWake = t;
     },
@@ -175,6 +180,14 @@ describe('UpscalerLink', () => {
     expect(hints).toHaveLength(1);
   });
 
+  it('passes sound features to the engine and survives a refusal', () => {
+    const { link, soundIds } = setup();
+    link.defineSounds({
+      hit: { durationMs: 100, brightness: [], loudness: [], noisiness: 0.2 },
+    });
+    expect(soundIds).toEqual(['hit']);
+  });
+
   it('wakes the engine at the time it asked for, once', () => {
     const { link, sent, wakes, wakeAt, setNow } = setup();
     wakeAt(1100);
@@ -205,6 +218,9 @@ describe('UpscalerLink', () => {
     const sent: Command[][] = [];
     const broken: UpscalerEngine = {
       define: () => [],
+      defineSounds: () => {
+        throw new Error('bad');
+      },
       consume: () => {
         throw new Error('boom');
       },
@@ -223,6 +239,8 @@ describe('UpscalerLink', () => {
     expect(() => link.signal(event('hit'))).not.toThrow();
     expect(ops(sent[0])).toEqual(['base:hit@1']);
     expect(problems).toHaveLength(1);
+    expect(() => link.defineSounds({})).not.toThrow();
+    expect(problems).toHaveLength(2);
   });
 
   it('drops commands the contract rejects', () => {
@@ -230,6 +248,7 @@ describe('UpscalerLink', () => {
     const sent: Command[][] = [];
     const engine: UpscalerEngine = {
       define: () => [],
+      defineSounds: () => undefined,
       consume: () => ({
         baseGain: 1,
         commands: [

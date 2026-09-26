@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser';
-import { queueSfxLoads } from '../audio/sfx';
+import { queueSfxLoads, SFX_LOADED_EVENT } from '../audio/sfx';
 
 type ManifestImage = { key: string; file: string };
 
@@ -77,6 +77,7 @@ export class PreloaderScene extends Phaser.Scene {
     this.makeFogTexture();
     this.makeGrainTexture();
     this.makeVignetteTexture();
+    this.game.events.emit(SFX_LOADED_EVENT);
     this.scene.start('Home');
   }
 

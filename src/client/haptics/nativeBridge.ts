@@ -1,6 +1,12 @@
 import type { Game } from 'phaser';
 import { CONTACT_EVENT, type ContactSignal } from '../combat/contactEvents';
-import { SFX_EVENT, type SfxEvent } from '../audio/sfx';
+import {
+  SFX_EVENT,
+  SFX_LOADED_EVENT,
+  sfxFirstVariants,
+  type SfxEvent,
+} from '../audio/sfx';
+import { analyzeLoaded } from '../audio/soundFeatures';
 import {
   BASE_HAPTIC_EVENT,
   BASE_VIBRATIONS,
@@ -88,6 +94,15 @@ export const installNativeBridge = (game: Game): boolean => {
     link.base(e.action)
   );
   game.events.on(SIGNAL_EVENT, (signal: Signal) => link.signal(signal));
+  game.events.once(SFX_LOADED_EVENT, () =>
+    analyzeLoaded(
+      sfxFirstVariants().map(({ id, cacheKey }) => ({
+        id,
+        sound: game.cache.audio.get(cacheKey),
+      })),
+      (features) => link.defineSounds(features)
+    )
+  );
 
   game.events.on(CONTACT_EVENT, (s: ContactSignal) => {
     post({

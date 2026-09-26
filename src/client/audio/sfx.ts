@@ -30,15 +30,33 @@ export type SfxKey = keyof typeof SFX;
 
 /** Fired on `game.events` for every sound played — the haptics tap point. */
 export const SFX_EVENT = 'sfx';
-export type SfxEvent = { key: SfxKey; variant: number; volume: number; t: number };
+export type SfxEvent = {
+  key: SfxKey;
+  variant: number;
+  volume: number;
+  t: number;
+};
 
 const variantKey = (key: SfxKey, n: number): string => `sfx_${key}_${n}`;
+
+/** Fired on `game.events` once every sound effect has loaded. */
+export const SFX_LOADED_EVENT = 'sfxLoaded';
+
+/** Each effect's first variant, as the upscaler analyses it. */
+export const sfxFirstVariants = (): { id: SfxKey; cacheKey: string }[] =>
+  (Object.keys(SFX) as SfxKey[]).map((id) => ({
+    id,
+    cacheKey: variantKey(id, 1),
+  }));
 
 export const queueSfxLoads = (
   scene: Phaser.Scene,
   assetUrl: (path: string) => string
 ): void => {
-  for (const [key, def] of Object.entries(SFX) as [SfxKey, (typeof SFX)[SfxKey]][]) {
+  for (const [key, def] of Object.entries(SFX) as [
+    SfxKey,
+    (typeof SFX)[SfxKey],
+  ][]) {
     for (let n = 1; n <= def.variants; n++) {
       const cacheKey = variantKey(key, n);
       // Phaser picks the first format the browser can decode; iOS WebKit

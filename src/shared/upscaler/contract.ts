@@ -192,6 +192,8 @@ export type UpscalerStep = {
 
 export type UpscalerEngine = {
   define(bases: readonly BaseVibration[]): Command[];
+  /** Features of the game's sound effects, by the id signals name. */
+  defineSounds(sounds: Readonly<Record<string, SoundFeatures>>): void;
   consume(signal: Signal, input: UpscalerInput): UpscalerStep;
   hint(hint: Hint, now: number): UpscalerStep;
   wake(now: number): UpscalerStep;

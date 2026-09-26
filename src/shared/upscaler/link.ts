@@ -5,6 +5,7 @@ import {
   type BaseVibration,
   type Command,
   type Hint,
+  type SoundFeatures,
   type UpscalerEngine,
   type UpscalerStep,
   validateCommand,
@@ -51,6 +52,14 @@ export class UpscalerLink {
 
   define(bases: readonly BaseVibration[]): void {
     this.send(this.engine.define(bases));
+  }
+
+  defineSounds(sounds: Readonly<Record<string, SoundFeatures>>): void {
+    try {
+      this.engine.defineSounds(sounds);
+    } catch (error) {
+      this.report(`sound features rejected: ${String(error)}`);
+    }
   }
 
   /** The game played its base vibration `name`. */

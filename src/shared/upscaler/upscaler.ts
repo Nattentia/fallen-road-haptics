@@ -11,6 +11,7 @@ import type {
   Hint,
   Score,
   ScoreSource,
+  SoundFeatures,
   UpscalerEngine,
   UpscalerInput,
   UpscalerStep,
@@ -79,11 +80,21 @@ export class HapticUpscaler implements UpscalerEngine {
   private readonly textures = new Map<string, Texture>();
   /** Expected moments by voice, kept for stage 6 (prepared decisions). */
   readonly expected = new Map<string, { at: number; importance: number }>();
+  private readonly sounds = new Map<string, SoundFeatures>();
   private seq = 0;
 
   define(bases: readonly BaseVibration[]): Command[] {
     for (const b of bases) this.bases.set(b.name, b);
     return bases.map((base) => ({ op: 'defineBase', base }));
+  }
+
+  defineSounds(sounds: Readonly<Record<string, SoundFeatures>>): void {
+    for (const [id, f] of Object.entries(sounds)) this.sounds.set(id, f);
+  }
+
+  /** Features of a sound the game registered (stage 5 decoration). */
+  soundOf(id: string | undefined): SoundFeatures | undefined {
+    return id === undefined ? undefined : this.sounds.get(id);
   }
 
   consume(signal: Signal, input: UpscalerInput): UpscalerStep {
