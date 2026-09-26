@@ -1,54 +1,82 @@
 {
-  "about": "Option A of D5: each option carries a short criterion with example objects (the Laya model card recommends detailed criteria). Examples are everyday objects that appear nowhere in validation.json and are not game words, so a pass cannot come from matching the answer key.",
+  "about": "Option A of D5: each option carries example objects (the Laya model card recommends detailed criteria). The phone's Core ML export takes at most 96 tokens per question, state included, so choice options carry two short examples each; true/false sides carry a short description. Examples are everyday objects that appear nowhere in validation.json and are not game words, so a pass cannot come from matching the answer key.",
   "choice": {
     "hardness": {
-      "very soft": "gives way completely, like whipped cream, a marshmallow or foam",
-      "soft": "dents easily, like skin, cheese, soil or a mattress",
-      "medium": "gives a little, like cork, cardboard or hard plastic",
-      "hard": "barely gives, like bone, a helmet or a wooden door",
-      "very hard": "does not give at all, like granite, diamond or a bank vault door"
+      "very soft": "foam, whipped cream",
+      "soft": "cheese, a mattress",
+      "medium": "cork, cardboard",
+      "hard": "bone, a helmet",
+      "very hard": "granite, diamond"
     },
     "weight": {
-      "very light": "almost weightless, like a bubble, a moth or a button",
-      "light": "easy to lift with one hand, like an apple, a phone or a shoe",
-      "medium": "takes some effort, like a chair, a backpack or a dog",
-      "heavy": "hard for one person to move, like a sofa, a person or a motorbike",
-      "very heavy": "tonnes of mass, like a bus, an elephant or a tank"
+      "very light": "a moth, a button",
+      "light": "an apple, a shoe",
+      "medium": "a chair, a dog",
+      "heavy": "a sofa, a motorbike",
+      "very heavy": "a bus, an elephant"
     },
     "roughness": {
-      "smooth": "slides freely, like a mirror, polished tile or still water",
-      "slightly rough": "a faint grain, like denim, a cotton towel or a painted fence",
-      "rough": "clearly grainy, like a doormat, a dirt path or a cat's tongue",
-      "very rough": "coarse and bumpy, like a cheese grater, coral or pumice",
-      "jagged": "sharp broken ridges, like saw teeth, barbed wire or cracked flint"
+      "smooth": "a mirror, still water",
+      "slightly rough": "denim, a towel",
+      "rough": "a doormat, a dirt path",
+      "very rough": "a grater, pumice",
+      "jagged": "saw teeth, barbed wire"
     },
     "contact": {
-      "a sharp edge slices": "a thin edge cuts along, like scissors through a ribbon or an axe splitting a log",
-      "a point pierces": "a narrow tip goes in, like a needle into fabric or an arrow into a hay bale",
-      "a heavy mass crushes": "a big weight presses or smashes, like a hydraulic press flattening a can or a steamroller",
-      "a surface scrapes along": "one surface drags over another, like a shovel on a sidewalk or a skateboard grinding a rail",
-      "something fragile shatters": "a brittle thing breaks into pieces, like a window pane, a vase or a light bulb"
+      "a sharp edge slices": "scissors",
+      "a point pierces": "a needle",
+      "a heavy mass crushes": "a hydraulic press",
+      "a surface scrapes along": "a shovel",
+      "something fragile shatters": "a vase"
     }
   },
   "noul": {
     "hardness": [
-      {"true": "hard, like bone, granite or a helmet", "false": "soft, like foam, cheese or a mattress"},
-      {"true": "soft, like foam, cheese or a mattress", "false": "hard, like bone, granite or a helmet"}
+      {
+        "true": "hard, like bone, granite or a helmet",
+        "false": "soft, like foam, cheese or a mattress"
+      },
+      {
+        "true": "soft, like foam, cheese or a mattress",
+        "false": "hard, like bone, granite or a helmet"
+      }
     ],
     "weight": [
-      {"true": "heavy, like a sofa, a bus or an elephant", "false": "light, like an apple, a moth or a button"},
-      {"true": "light, like an apple, a moth or a button", "false": "heavy, like a sofa, a bus or an elephant"}
+      {
+        "true": "heavy, like a sofa, a bus or an elephant",
+        "false": "light, like an apple, a moth or a button"
+      },
+      {
+        "true": "light, like an apple, a moth or a button",
+        "false": "heavy, like a sofa, a bus or an elephant"
+      }
     ],
     "roughness": [
-      {"true": "rough, like a doormat, a cheese grater or coral", "false": "smooth, like a mirror, polished tile or still water"},
-      {"true": "smooth, like a mirror, polished tile or still water", "false": "rough, like a doormat, a cheese grater or coral"}
+      {
+        "true": "rough, like a doormat, a cheese grater or coral",
+        "false": "smooth, like a mirror, polished tile or still water"
+      },
+      {
+        "true": "smooth, like a mirror, polished tile or still water",
+        "false": "rough, like a doormat, a cheese grater or coral"
+      }
     ],
     "contact": [
-      {"true": "like scissors through a ribbon or an axe splitting a log"},
-      {"true": "like a needle into fabric or an arrow into a hay bale"},
-      {"true": "like a hydraulic press flattening a can or a steamroller"},
-      {"true": "like a shovel on a sidewalk or a skateboard grinding a rail"},
-      {"true": "like a window pane, a vase or a light bulb breaking"}
+      {
+        "true": "like scissors through a ribbon or an axe splitting a log"
+      },
+      {
+        "true": "like a needle into fabric or an arrow into a hay bale"
+      },
+      {
+        "true": "like a hydraulic press flattening a can or a steamroller"
+      },
+      {
+        "true": "like a shovel on a sidewalk or a skateboard grinding a rail"
+      },
+      {
+        "true": "like a window pane, a vase or a light bulb breaking"
+      }
     ]
   }
 }
