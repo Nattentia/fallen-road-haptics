@@ -102,6 +102,72 @@ describe('FallenRoadSignals', () => {
     expect(chainOf(death!)).toBeUndefined();
   });
 
+  it('cancels a wind-up dropped before impact', () => {
+    const { adapter, signals } = setup();
+    adapter.enemyWindUp(attack, 600);
+    adapter.attackCalledOff();
+    adapter.attackDone();
+    const steps = signals.map((s) => chainOf(s)?.step);
+    expect(steps).toEqual(['start', 'cancel']);
+    expect(chainOf(signals[1]!)?.id).toBe(chainOf(signals[0]!)?.id);
+    expect(signals[1]).toMatchObject({ magnitude: 0, outcome: 'none' });
+  });
+
+  it('does not cancel an attack that already resolved', () => {
+    const { adapter, signals } = setup();
+    adapter.enemyWindUp(attack, 600);
+    adapter.playerCountered(attack, false);
+    adapter.attackCalledOff(); // the counter staggers the enemy
+    adapter.attackDone();
+    expect(signals.map((s) => chainOf(s)?.step)).toEqual(['start', 'resolve']);
+  });
+
+  it('cancels the pending wind-up when the enemy is felled', () => {
+    const { adapter, signals } = setup();
+    adapter.enemyWindUp(attack, 600);
+    adapter.strikeLanded(sword, 'head', false, false, 20);
+    adapter.enemyFelled(false);
+    adapter.swipeDone();
+    const attackId = chainOf(signals[0]!)?.id;
+    expect(
+      signals
+        .map(chainOf)
+        .filter((c) => c?.id === attackId)
+        .map((c) => c?.step)
+    ).toEqual(['start', 'cancel']);
+  });
+
+  it('cancels a swipe that touched the enemy but was never resolved', () => {
+    const { adapter, signals } = setup();
+    adapter.contacts(
+      [{ phase: 'enter', zoneId: 'head', priority: 4, speed: 1500, t: 10 }],
+      sword
+    );
+    adapter.swipeDone();
+    adapter.swipeDone();
+    expect(signals.map((s) => chainOf(s)?.step)).toEqual(['start', 'cancel']);
+  });
+
+  it('cancels a burst cut short, but not one that finished', () => {
+    const { adapter, signals } = setup();
+    adapter.burstStart(sword, 200);
+    adapter.burstHit(sword, 7, false);
+    adapter.burstCutShort();
+    adapter.burstCutShort();
+    adapter.burstStart(sword, 200);
+    adapter.burstHit(sword, 7, true);
+    adapter.burstCutShort();
+    expect(signals.map((s) => chainOf(s)?.step)).toEqual([
+      'start',
+      'progress',
+      'progress',
+      'cancel',
+      'start',
+      'progress',
+      'end',
+    ]);
+  });
+
   it('reports gauges only when they change', () => {
     const { adapter, signals } = setup();
     const frame = {

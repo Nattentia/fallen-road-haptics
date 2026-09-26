@@ -34,7 +34,11 @@ import {
   type ContactState,
 } from '../../shared/combat/contacts';
 import { CONTACT_EVENT, type ContactSignal } from '../combat/contactEvents';
-import { computeStrike, blockedDamage, guardBrokenDamage } from '../../shared/combat/damage';
+import {
+  computeStrike,
+  blockedDamage,
+  guardBrokenDamage,
+} from '../../shared/combat/damage';
 import {
   applyGuardDamage,
   createGuardMeter,
@@ -96,8 +100,18 @@ import {
   spawnRoadsideDrift,
   type BackdropHandles,
 } from '../ui/backdrop';
-import { damageVignette, drawSlashTrail, spawnPaperFragments } from '../ui/effects';
-import { DODGE_TEXT, FONT, MUTED_TEXT, PAPER, PARCHMENT_TEXT } from '../ui/theme';
+import {
+  damageVignette,
+  drawSlashTrail,
+  spawnPaperFragments,
+} from '../ui/effects';
+import {
+  DODGE_TEXT,
+  FONT,
+  MUTED_TEXT,
+  PAPER,
+  PARCHMENT_TEXT,
+} from '../ui/theme';
 import {
   REWARD_SCENE_KEY,
   type RewardChoice,
@@ -187,7 +201,8 @@ export class BattleScene extends Phaser.Scene {
   }
 
   init(data?: BattleStartData): void {
-    this.stage = data?.stage === 'castle' || data?.stage === 'rival' ? data.stage : 'road';
+    this.stage =
+      data?.stage === 'castle' || data?.stage === 'rival' ? data.stage : 'road';
     this.carried = data?.carry ?? null;
     this.dailyRun = data?.dailyRun ?? data?.carry?.dailyRun ?? null;
     this.fallenRival = data?.rival ?? data?.carry?.fallenRival ?? null;
@@ -212,7 +227,8 @@ export class BattleScene extends Phaser.Scene {
           ? this.dailyRun.daily.gambitDeck
           : shuffledGambitDeck(Math.random),
       });
-    this.roadEnemyIds = this.dailyRun?.daily.roadEnemyIds ?? randomizedRoadRoute(Math.random);
+    this.roadEnemyIds =
+      this.dailyRun?.daily.roadEnemyIds ?? randomizedRoadRoute(Math.random);
     this.playerGuard = createGuardMeter(this.playerMaxGuard());
     this.playerBurst = this.carried?.playerBurst ?? 0;
     this.playerDodge = createDodgeState();
@@ -236,9 +252,7 @@ export class BattleScene extends Phaser.Scene {
     this.tracker = new PlayerPatternTracker();
 
     this.backdrop =
-      this.stage === 'castle'
-        ? buildCastleBackdrop(this)
-        : buildBackdrop(this);
+      this.stage === 'castle' ? buildCastleBackdrop(this) : buildBackdrop(this);
     this.rig = new PlayerRigView(this);
     this.rig.setWeapon(this.run.weaponId);
     this.hud = new Hud(this, {
@@ -266,12 +280,18 @@ export class BattleScene extends Phaser.Scene {
       if (!event.repeat) this.pressDodge();
     });
     this.input.keyboard?.on('keydown-Q', () => this.tryActivateBurst());
-    this.input.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
-      if (pointer.rightButtonDown()) this.pressShield();
-    });
-    this.input.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
-      if (pointer.rightButtonReleased()) this.releaseShield();
-    });
+    this.input.on(
+      Phaser.Input.Events.POINTER_DOWN,
+      (pointer: Phaser.Input.Pointer) => {
+        if (pointer.rightButtonDown()) this.pressShield();
+      }
+    );
+    this.input.on(
+      Phaser.Input.Events.POINTER_UP,
+      (pointer: Phaser.Input.Pointer) => {
+        if (pointer.rightButtonReleased()) this.releaseShield();
+      }
+    );
 
     // Roadside silhouettes rush past while walking.
     this.time.addEvent({
@@ -319,16 +339,28 @@ export class BattleScene extends Phaser.Scene {
     this.tweens.timeScale = inHitStop ? 0.05 : 1;
 
     // Player stamina does not regenerate — it refills only on a won duel.
-    if (this.mode === 'fight' && this.brain && this.def && this.enemyView && !inHitStop) {
+    if (
+      this.mode === 'fight' &&
+      this.brain &&
+      this.def &&
+      this.enemyView &&
+      !inHitStop
+    ) {
       this.brain.update(time, {
         healthFraction: this.enemyHealth / this.def.maxHealth,
         signals: this.tracker.signals(),
       });
       this.enemyView.updateIdle(time);
-      this.enemyGuard = regenGuard(this.enemyGuard, time, delta, this.brain.isBlocking(), {
-        regenPerSecond: this.def.guardRegenPerSecond,
-        regenDelayMs: this.def.guardRegenDelayMs,
-      });
+      this.enemyGuard = regenGuard(
+        this.enemyGuard,
+        time,
+        delta,
+        this.brain.isBlocking(),
+        {
+          regenPerSecond: this.def.guardRegenPerSecond,
+          regenDelayMs: this.def.guardRegenDelayMs,
+        }
+      );
     }
 
     if (this.mode === 'travel' && time >= this.nextSpawnAt) {
@@ -349,7 +381,11 @@ export class BattleScene extends Phaser.Scene {
       playerGuard: this.playerGuard.current,
       playerMaxGuard: this.playerGuard.max,
       playerGuardBroken: isGuardBroken(this.playerGuard, time),
-      dodgeReady01: dodgeReadyFraction(this.playerDodge, time, PLAYER_BALANCE.dodgeCooldownMs),
+      dodgeReady01: dodgeReadyFraction(
+        this.playerDodge,
+        time,
+        PLAYER_BALANCE.dodgeCooldownMs
+      ),
       burst: this.playerBurst,
       burstMax: PLAYER_BALANCE.burstMax,
       enemyHealth: this.enemyHealth,
@@ -364,7 +400,8 @@ export class BattleScene extends Phaser.Scene {
   // ------------------------------------------------------------------
 
   private spawnEnemy(): void {
-    const bossFight = this.stage === 'castle' || this.encounterNumber > ROAD_FIGHTS_BEFORE_BOSS;
+    const bossFight =
+      this.stage === 'castle' || this.encounterNumber > ROAD_FIGHTS_BEFORE_BOSS;
     const id =
       this.roadEnemyIds[this.encounterNumber - 1] ??
       GAUNTLET_ORDER[(this.encounterNumber - 1) % GAUNTLET_ORDER.length]!;
@@ -385,7 +422,12 @@ export class BattleScene extends Phaser.Scene {
     this.enemyGuardBrokenState = false;
     this.secondWindUsed = false;
 
-    const view = new PaperEnemyView(this, ENEMY_POSITION.x, ENEMY_POSITION.y, def);
+    const view = new PaperEnemyView(
+      this,
+      ENEMY_POSITION.x,
+      ENEMY_POSITION.y,
+      def
+    );
     view.playSpawn();
     this.enemyView = view;
 
@@ -406,12 +448,20 @@ export class BattleScene extends Phaser.Scene {
         onBlockStart: (stance) => view.playBlock(stance),
         onBlockEnd: () => view.endBlock(),
         onDodgeStart: (direction) =>
-          view.playDodge(direction, def.behavior.dodgeDurationMs, def.behavior.dodgeDistance),
+          view.playDodge(
+            direction,
+            def.behavior.dodgeDurationMs,
+            def.behavior.dodgeDistance
+          ),
         onDodgeEnd: () => {},
         onCounterStanceStart: (totalMs) => view.showCounterStance(totalMs),
         onCounterStanceEnd: () => view.hideCounterStance(),
         onParry: () => this.onParried(),
-        onStaggerStart: () => view.playStagger(),
+        onStaggerStart: () => {
+          // Staggers drop any wind-up in progress (a resolved one is untouched).
+          this.signals.attackCalledOff();
+          view.playStagger();
+        },
         onGuardBreakStart: () => this.onEnemyGuardBreak(),
         onVulnerableEnd: () => this.onEnemyVulnerableEnd(),
         onPhaseChange: (phase) => {
@@ -421,12 +471,21 @@ export class BattleScene extends Phaser.Scene {
             'gate-fury': "THE GATEKEEPER'S FURY RISES!",
             'last-stand': 'THE GATEKEEPER MAKES A LAST STAND!',
           };
-          this.hud.showMessage(phaseMessages[phase.id] ?? 'THE FOE CHANGES STANCE!', '#d94f3d');
+          this.hud.showMessage(
+            phaseMessages[phase.id] ?? 'THE FOE CHANGES STANCE!',
+            '#d94f3d'
+          );
           this.cameras.main.shake(120, 0.005);
         },
       },
       this.dailyRun && this.stage !== 'rival'
-        ? seededRandom(encounterSeed(this.dailyRun.daily.seed, this.stage, this.encounterNumber))
+        ? seededRandom(
+            encounterSeed(
+              this.dailyRun.daily.seed,
+              this.stage,
+              this.encounterNumber
+            )
+          )
         : Math.random,
       this.time.now + 700
     );
@@ -436,13 +495,21 @@ export class BattleScene extends Phaser.Scene {
       this.hud.showMessage('THE FALLEN KING RISES', '#8fd8ff', 34);
       this.cameras.main.shake(260, 0.007);
     } else if (this.stage === 'rival' && this.fallenRival) {
-      this.hud.showMessage(`u/${this.fallenRival.username.toUpperCase()} STIRS AGAIN`, '#8fd8ff', 29);
+      this.hud.showMessage(
+        `u/${this.fallenRival.username.toUpperCase()} STIRS AGAIN`,
+        '#8fd8ff',
+        29
+      );
       this.cameras.main.shake(180, 0.006);
     } else if (bossFight) {
       this.hud.showMessage('THE GATEKEEPER BARS THE GATES', '#ffd75e', 30);
       this.cameras.main.shake(200, 0.006);
     } else {
-      this.hud.showMessage(`A ${def.name.toUpperCase()} BLOCKS THE ROAD`, '#d94f3d', 26);
+      this.hud.showMessage(
+        `A ${def.name.toUpperCase()} BLOCKS THE ROAD`,
+        '#d94f3d',
+        26
+      );
     }
     this.mode = 'fight';
   }
@@ -527,7 +594,10 @@ export class BattleScene extends Phaser.Scene {
    */
   private approachTower(durationMs: number): void {
     const { tower, towerAura, roadGlow } = this.backdrop;
-    const progress = Math.min(1, (this.encounterNumber - 1) / ROAD_FIGHTS_BEFORE_BOSS);
+    const progress = Math.min(
+      1,
+      (this.encounterNumber - 1) / ROAD_FIGHTS_BEFORE_BOSS
+    );
     if (tower) {
       this.tweens.add({
         targets: tower,
@@ -694,12 +764,18 @@ export class BattleScene extends Phaser.Scene {
         : 'Take power from the road. Its price comes with it.',
       resumeScene: this.scene.key,
       onSelected: (selection) => {
-        const selected = gambits.find((gambit) => gambit.id === selection.choice.id);
+        const selected = gambits.find(
+          (gambit) => gambit.id === selection.choice.id
+        );
         if (!selected) return;
         this.run = claimGambit(this.run, selected.id);
         this.syncPlayerGuardCapacity();
         this.syncRunHud();
-        this.hud.showMessage(`${selected.name.toUpperCase()} TAKEN`, '#ffb347', 27);
+        this.hud.showMessage(
+          `${selected.name.toUpperCase()} TAKEN`,
+          '#ffb347',
+          27
+        );
       },
     };
     this.launchRewardScene(
@@ -724,9 +800,7 @@ export class BattleScene extends Phaser.Scene {
     const [mend, spear, hammer, dagger, mace] = MERCHANT_OFFERS;
     if (!mend || !spear || !hammer || !dagger || !mace) return;
     const offers: readonly [MerchantOffer, MerchantOffer, MerchantOffer] =
-      completedEncounter >= 4
-        ? [mend, hammer, mace]
-        : [mend, spear, dagger];
+      completedEncounter >= 4 ? [mend, hammer, mace] : [mend, spear, dagger];
     const [first, second, third] = offers;
     const choices: RewardChoices = [
       this.merchantRewardChoice(first),
@@ -737,11 +811,15 @@ export class BattleScene extends Phaser.Scene {
       choices,
       title: 'THE PAPER PEDDLER',
       subtitle: `${this.run.coins} coins in hand. ${
-        completedEncounter >= 4 ? 'The heavy rack opens.' : 'Choose speed, reach, or repair.'
+        completedEncounter >= 4
+          ? 'The heavy rack opens.'
+          : 'Choose speed, reach, or repair.'
       }`,
       resumeScene: this.scene.key,
       onSelected: (selection) => {
-        const selected = offers.find((offer) => offer.id === selection.choice.id);
+        const selected = offers.find(
+          (offer) => offer.id === selection.choice.id
+        );
         if (!selected) return;
         const paidRun = spendCoins(this.run, selected.price);
         if (!paidRun) {
@@ -755,7 +833,11 @@ export class BattleScene extends Phaser.Scene {
         } else {
           this.run = equipWeapon(this.run, selected.weaponId);
           this.rig.setWeapon(selected.weaponId);
-          this.hud.showMessage(`${selected.name.toUpperCase()} TAKEN`, '#ffb347', 27);
+          this.hud.showMessage(
+            `${selected.name.toUpperCase()} TAKEN`,
+            '#ffb347',
+            27
+          );
         }
         this.syncRunHud();
       },
@@ -793,7 +875,9 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private playerMaxGuard(): number {
-    return Math.round(PLAYER_BALANCE.maxGuard * modifiersForRun(this.run).maxGuardMultiplier);
+    return Math.round(
+      PLAYER_BALANCE.maxGuard * modifiersForRun(this.run).maxGuardMultiplier
+    );
   }
 
   private syncPlayerGuardCapacity(): void {
@@ -808,7 +892,10 @@ export class BattleScene extends Phaser.Scene {
   private healPlayer(amount: number): void {
     const modifiers = modifiersForRun(this.run);
     const healed = Math.round(amount * modifiers.healingReceivedMultiplier);
-    this.playerHealth = Math.min(PLAYER_BALANCE.maxHealth, this.playerHealth + healed);
+    this.playerHealth = Math.min(
+      PLAYER_BALANCE.maxHealth,
+      this.playerHealth + healed
+    );
   }
 
   private gainPlayerBurst(event: BurstEvent): void {
@@ -851,12 +938,20 @@ export class BattleScene extends Phaser.Scene {
 
     // The shield commits you: no swinging while it is raised.
     if (this.holdingBlock) {
-      this.hud.showFloatingText(gesture.end.x, gesture.end.y, 'guarding', MUTED_TEXT);
+      this.hud.showFloatingText(
+        gesture.end.x,
+        gesture.end.y,
+        'guarding',
+        MUTED_TEXT
+      );
       return;
     }
     if (now < this.nextAttackReadyAt) return;
-    const recoveryMs = gesture.heavy ? weapon.heavy.recoveryMs : weapon.recoveryMs;
-    this.nextAttackReadyAt = now + Math.round(recoveryMs * modifiers.attackRecoveryMultiplier);
+    const recoveryMs = gesture.heavy
+      ? weapon.heavy.recoveryMs
+      : weapon.recoveryMs;
+    this.nextAttackReadyAt =
+      now + Math.round(recoveryMs * modifiers.attackRecoveryMultiplier);
 
     this.rig.swing(gesture.direction, gesture.heavy);
     playSfx(this, gesture.heavy ? 'swing_heavy' : 'swing_light');
@@ -905,7 +1000,12 @@ export class BattleScene extends Phaser.Scene {
       playBaseHaptic(this, 'enemy_block');
       this.signals.strikeBlocked(weapon, hitZone.id, strike.damage);
       spawnPaperFragments(this, zonePos.x - 40, zonePos.y, 3, PAPER.guard);
-      this.hud.showFloatingText(zonePos.x, zonePos.y - 20, 'BLOCKED', '#4f8fdd');
+      this.hud.showFloatingText(
+        zonePos.x,
+        zonePos.y - 20,
+        'BLOCKED',
+        '#4f8fdd'
+      );
       this.applyEnemyGuardDamage(strike.guardDamage, now);
     } else {
       const zoneInfo = zoneBalance(hitZone.id);
@@ -919,11 +1019,19 @@ export class BattleScene extends Phaser.Scene {
       );
       if (lifeSteal > 0) this.healPlayer(lifeSteal);
       if (zoneInfo.weakPoint) this.stats.weakPointHits += 1;
-      this.gainPlayerBurst(classifyHitBurstEvent(zoneInfo.weakPoint, gesture.heavy));
+      this.gainPlayerBurst(
+        classifyHitBurstEvent(zoneInfo.weakPoint, gesture.heavy)
+      );
       view.playHitReaction(hitZone.id, gesture.heavy);
       playSfx(this, `hit_${weapon.id}`, { volume: gesture.heavy ? 1.2 : 1 });
       playBaseHaptic(this, 'enemy_hit');
-      this.signals.strikeLanded(weapon, hitZone.id, gesture.heavy, zoneInfo.weakPoint, damage);
+      this.signals.strikeLanded(
+        weapon,
+        hitZone.id,
+        gesture.heavy,
+        zoneInfo.weakPoint,
+        damage
+      );
       if (zoneInfo.weakPoint) playSfx(this, 'hit_weak');
       spawnPaperFragments(this, zonePos.x, zonePos.y, gesture.heavy ? 10 : 6);
       this.hud.showFloatingText(
@@ -934,7 +1042,6 @@ export class BattleScene extends Phaser.Scene {
       );
       if (zoneInfo.weakPoint || gesture.heavy) {
         this.hitStopUntil = now + 70;
-        this.signals.hitStop(this.hitStopUntil, 0.05);
         this.cameras.main.shake(90, 0.004);
       }
 
@@ -942,7 +1049,12 @@ export class BattleScene extends Phaser.Scene {
       const slow = zoneInfo.slow;
       if (slow) {
         brain.applySlow(now, slow.durationMs, slow.factor);
-        this.hud.showFloatingText(zonePos.x, zonePos.y - 60, 'SLOWED', '#4f8fdd');
+        this.hud.showFloatingText(
+          zonePos.x,
+          zonePos.y - 60,
+          'SLOWED',
+          '#4f8fdd'
+        );
       }
       if (
         zoneInfo.interruptChance !== undefined &&
@@ -964,7 +1076,12 @@ export class BattleScene extends Phaser.Scene {
       }
       if (gesture.heavy && weapon.heavyStaggerMs > 0) {
         brain.applySlow(now, weapon.heavyStaggerMs, 0.4);
-        this.hud.showFloatingText(zonePos.x, zonePos.y - 60, 'STAGGERED', '#ffb347');
+        this.hud.showFloatingText(
+          zonePos.x,
+          zonePos.y - 60,
+          'STAGGERED',
+          '#ffb347'
+        );
       }
     }
 
@@ -991,7 +1108,11 @@ export class BattleScene extends Phaser.Scene {
    * resolves on release in onGesture. Contacts are suppressed whenever that
    * release would be ignored anyway (shield up, recovering, bursting).
    */
-  private onSwipeSegment(a: GesturePoint, b: GesturePoint, inputTs: number): void {
+  private onSwipeSegment(
+    a: GesturePoint,
+    b: GesturePoint,
+    inputTs: number
+  ): void {
     const view = this.enemyView;
     const live =
       this.mode === 'fight' &&
@@ -1019,7 +1140,11 @@ export class BattleScene extends Phaser.Scene {
   private emitContacts(events: readonly ContactEvent[], inputTs: number): void {
     this.signals.contacts(events, weaponForRun(this.run));
     for (const event of events) {
-      const signal: ContactSignal = { ...event, inputTs, emitTs: performance.now() };
+      const signal: ContactSignal = {
+        ...event,
+        inputTs,
+        emitTs: performance.now(),
+      };
       this.game.events.emit(CONTACT_EVENT, signal);
     }
   }
@@ -1030,17 +1155,26 @@ export class BattleScene extends Phaser.Scene {
 
   private applyEnemyGuardDamage(amount: number, now: number): void {
     if (this.enemyGuardBrokenState || !this.def || !this.brain) return;
-    const result = applyGuardDamage(this.enemyGuard, amount, now, this.def.guardBreakDurationMs);
+    const result = applyGuardDamage(
+      this.enemyGuard,
+      amount,
+      now,
+      this.def.guardBreakDurationMs
+    );
     this.enemyGuard = result.meter;
     if (result.broke) this.brain.notifyGuardBroken(now);
   }
 
   private onEnemyGuardBreak(): void {
     this.enemyGuardBrokenState = true;
+    this.signals.attackCalledOff();
     this.enemyView?.playGuardBreak();
     playSfx(this, 'guard_break');
     playBaseHaptic(this, 'enemy_guard_break');
-    if (this.def) this.signals.enemyGuardBroken(this.time.now + this.def.guardBreakDurationMs);
+    if (this.def)
+      this.signals.enemyGuardBroken(
+        this.time.now + this.def.guardBreakDurationMs
+      );
     this.hud.showMessage('ENEMY GUARD BROKEN!', '#d94f3d');
     const torso = this.enemyView?.getHitZones().find((z) => z.id === 'torso');
     if (torso) spawnPaperFragments(this, torso.shape.x, torso.shape.y, 14);
@@ -1090,7 +1224,10 @@ export class BattleScene extends Phaser.Scene {
   private releaseShield(): void {
     if (!this.holdingBlock) return;
     this.holdingBlock = false;
-    if (!isGuardBroken(this.playerGuard, this.time.now) && this.mode !== 'over') {
+    if (
+      !isGuardBroken(this.playerGuard, this.time.now) &&
+      this.mode !== 'over'
+    ) {
       this.rig.lowerShield();
     }
   }
@@ -1174,11 +1311,14 @@ export class BattleScene extends Phaser.Scene {
         this.hud.showMessage('PERFECT COUNTER!', '#4f8fdd');
         this.cameras.main.flash(90, 40, 40, 80);
         this.cameras.main.zoomTo(1.05, 80, 'Sine.easeOut', true);
-        this.time.delayedCall(150, () => this.cameras.main.zoomTo(1, 140, 'Sine.easeIn', true));
+        this.time.delayedCall(150, () =>
+          this.cameras.main.zoomTo(1, 140, 'Sine.easeIn', true)
+        );
         this.brain?.notifyCountered(now);
         this.applyEnemyGuardDamage(
           Math.round(
-            attack.counterGuardDamage * modifiersForRun(this.run).counterGuardDamageMultiplier
+            attack.counterGuardDamage *
+              modifiersForRun(this.run).counterGuardDamageMultiplier
           ),
           now
         );
@@ -1202,7 +1342,10 @@ export class BattleScene extends Phaser.Scene {
         this.cameras.main.shake(70, 0.003);
         spawnPaperFragments(this, 300, 620, 4, PAPER.guard);
         // Shield durability gets chewed up quickly: most foes shatter it in 2-3 blocks.
-        const durabilityCost = blockedHitGuardCost(attack.damage, PLAYER_BALANCE);
+        const durabilityCost = blockedHitGuardCost(
+          attack.damage,
+          PLAYER_BALANCE
+        );
         const result = applyGuardDamage(
           this.playerGuard,
           durabilityCost,
@@ -1249,7 +1392,10 @@ export class BattleScene extends Phaser.Scene {
     if (amount <= 0) return;
     this.playerGuard = {
       ...this.playerGuard,
-      current: Math.min(this.playerGuard.max, this.playerGuard.current + amount),
+      current: Math.min(
+        this.playerGuard.max,
+        this.playerGuard.current + amount
+      ),
     };
     this.hud.showFloatingText(350, 590, `+${amount} GUARD`, '#4f8fdd');
   }
@@ -1285,7 +1431,13 @@ export class BattleScene extends Phaser.Scene {
 
   private tryActivateBurst(): void {
     const now = this.time.now;
-    if (this.mode !== 'fight' || this.burstActive || !this.brain || this.brain.isDead()) return;
+    if (
+      this.mode !== 'fight' ||
+      this.burstActive ||
+      !this.brain ||
+      this.brain.isDead()
+    )
+      return;
     if (!canActivateBurst(this.playerBurst, PLAYER_BALANCE.burstMax)) return;
 
     // Bursting is an all-out attack — the shield drops for it.
@@ -1317,22 +1469,40 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private applyBurstHit(weaponId: WeaponId, index: number): void {
-    if (this.mode !== 'fight' || !this.brain || !this.enemyView || !this.def) return;
-    if (this.brain.isDead()) return;
+    if (
+      this.mode !== 'fight' ||
+      !this.brain ||
+      !this.enemyView ||
+      !this.def ||
+      this.brain.isDead()
+    ) {
+      this.signals.burstCutShort();
+      return;
+    }
     const burst = weaponForRun({ ...this.run, weaponId }).burst;
     this.rig.playBurst(weaponId, index);
 
     const zones = this.enemyView.getHitZones();
-    const target = zones.find((z) => z.id === (index % 2 === 0 ? 'torso' : 'head')) ?? zones[0];
-    const center = target ? this.zoneCenter(target) : { x: ENEMY_POSITION.x, y: 460 };
+    const target =
+      zones.find((z) => z.id === (index % 2 === 0 ? 'torso' : 'head')) ??
+      zones[0];
+    const center = target
+      ? this.zoneCenter(target)
+      : { x: ENEMY_POSITION.x, y: 460 };
 
     const angle = Math.random() * Math.PI;
     const reach = 130;
     drawSlashTrail(
       this,
       [
-        { x: center.x - Math.cos(angle) * reach, y: center.y - Math.sin(angle) * reach },
-        { x: center.x + Math.cos(angle) * reach, y: center.y + Math.sin(angle) * reach },
+        {
+          x: center.x - Math.cos(angle) * reach,
+          y: center.y - Math.sin(angle) * reach,
+        },
+        {
+          x: center.x + Math.cos(angle) * reach,
+          y: center.y + Math.sin(angle) * reach,
+        },
       ],
       false,
       true
@@ -1378,7 +1548,9 @@ export class BattleScene extends Phaser.Scene {
       46
     );
     this.cameras.main.shake(220, 0.01);
-    const overlay = this.add.rectangle(640, 360, 1280, 720, 0x000000, 0).setDepth(85);
+    const overlay = this.add
+      .rectangle(640, 360, 1280, 720, 0x000000, 0)
+      .setDepth(85);
     this.tweens.add({ targets: overlay, fillAlpha: 0.55, duration: 700 });
     this.time.delayedCall(900, () => this.showEndPanel(false));
   }
@@ -1394,7 +1566,9 @@ export class BattleScene extends Phaser.Scene {
       46
     );
     this.cameras.main.flash(300, 60, 50, 20);
-    const overlay = this.add.rectangle(640, 360, 1280, 720, 0x000000, 0).setDepth(85);
+    const overlay = this.add
+      .rectangle(640, 360, 1280, 720, 0x000000, 0)
+      .setDepth(85);
     this.tweens.add({ targets: overlay, fillAlpha: 0.4, duration: 900 });
     this.time.delayedCall(1300, () => this.showEndPanel(true));
   }
@@ -1402,7 +1576,10 @@ export class BattleScene extends Phaser.Scene {
   private showEndPanel(victory: boolean): void {
     const durationSec = Math.round((this.time.now - this.runStartAt) / 1000);
     const rivalFight = this.stage === 'rival' && this.fallenRival !== null;
-    this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.3).setDepth(90).setInteractive();
+    this.add
+      .rectangle(640, 360, 1280, 720, 0x000000, 0.3)
+      .setDepth(90)
+      .setInteractive();
 
     const panel = this.add
       .rectangle(640, 360, 560, 470, PAPER.plate, 0.96)
@@ -1421,11 +1598,12 @@ export class BattleScene extends Phaser.Scene {
             ? 'THE ECHO ENDURES'
             : 'THE ROAD CLAIMS YOU',
         {
-        fontFamily: FONT,
-        fontSize: '36px',
-        fontStyle: 'bold',
-        color: victory ? '#ffd75e' : '#d94f3d',
-      })
+          fontFamily: FONT,
+          fontSize: '36px',
+          fontStyle: 'bold',
+          color: victory ? '#ffd75e' : '#d94f3d',
+        }
+      )
       .setOrigin(0.5)
       .setDepth(92);
 
@@ -1481,7 +1659,13 @@ export class BattleScene extends Phaser.Scene {
     // Explicit data: Phaser keeps the previous scene data when none is
     // passed, which would otherwise respawn a fallen player in the castle.
     this.endButton(640, 512, 'NEW DAILY RUN', () => this.scene.start('Home'));
-    this.endButton(640, 565, 'RETURN HOME', () => this.scene.start('Home'), true);
+    this.endButton(
+      640,
+      565,
+      'RETURN HOME',
+      () => this.scene.start('Home'),
+      true
+    );
   }
 
   private submitDailyScore(
@@ -1506,8 +1690,11 @@ export class BattleScene extends Phaser.Scene {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        if (!response.ok) throw new Error(`Daily score error: ${response.status}`);
-        const result = DailyRunCompletionResponseSchema.parse(await response.json());
+        if (!response.ok)
+          throw new Error(`Daily score error: ${response.status}`);
+        const result = DailyRunCompletionResponseSchema.parse(
+          await response.json()
+        );
         if (!label.active) return;
         label.setText(
           `DAILY SCORE ${result.score}  •  BEST ${result.bestScore}  •  RANK #${result.rank}`
@@ -1519,7 +1706,10 @@ export class BattleScene extends Phaser.Scene {
     })();
   }
 
-  private submitRivalResult(victory: boolean, label: Phaser.GameObjects.Text): void {
+  private submitRivalResult(
+    victory: boolean,
+    label: Phaser.GameObjects.Text
+  ): void {
     const rival = this.fallenRival;
     if (!rival) return;
     void (async () => {
@@ -1533,8 +1723,11 @@ export class BattleScene extends Phaser.Scene {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        if (!response.ok) throw new Error(`Rival result error: ${response.status}`);
-        const result = FallenRivalAvengeResponseSchema.parse(await response.json());
+        if (!response.ok)
+          throw new Error(`Rival result error: ${response.status}`);
+        const result = FallenRivalAvengeResponseSchema.parse(
+          await response.json()
+        );
         if (!label.active) return;
         label.setText(
           victory
@@ -1548,9 +1741,21 @@ export class BattleScene extends Phaser.Scene {
     })();
   }
 
-  private endButton(x: number, y: number, label: string, onClick: () => void, minor = false): void {
+  private endButton(
+    x: number,
+    y: number,
+    label: string,
+    onClick: () => void,
+    minor = false
+  ): void {
     const button = this.add
-      .rectangle(x, y, minor ? 300 : 360, minor ? 42 : 54, minor ? PAPER.plate : PAPER.cardboard)
+      .rectangle(
+        x,
+        y,
+        minor ? 300 : 360,
+        minor ? 42 : 54,
+        minor ? PAPER.plate : PAPER.cardboard
+      )
       .setStrokeStyle(2.5, minor ? PAPER.rim : PAPER.burst, 0.9)
       .setDepth(92)
       .setInteractive({ useHandCursor: true });

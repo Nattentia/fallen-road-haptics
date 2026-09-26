@@ -56,6 +56,8 @@ export class FallenRoadSignals {
   private swipeChain: string | null = null;
   private burstChain: string | null = null;
   private attackChain: string | null = null;
+  /** Chains that reached an outcome; the rest end in `cancel` if dropped. */
+  private readonly resolved = new Set<string>();
 
   constructor(private readonly scene: SignalHost) {
     this.bus = new SignalBus(scene.game);
@@ -66,7 +68,37 @@ export class FallenRoadSignals {
   }
 
   private event(fields: Omit<EventSignal, 'kind' | 't'>): void {
+    const step = fields.chain?.step;
+    if (step === 'resolve' || step === 'end')
+      this.resolved.add(fields.chain!.id);
     this.bus.emit({ kind: 'event', t: this.now, ...fields });
+  }
+
+  /**
+   * Closes a chain that ends without an outcome, so the upscaler never keeps
+   * a haptic running for an action that will not come. A chain that already
+   * resolved just closes silently. Always returns null for the caller's slot.
+   */
+  private close(
+    chain: string | null,
+    actor: EventSignal['actor'],
+    target: EventSignal['target'],
+    description: string
+  ): null {
+    if (chain !== null && !this.resolved.has(chain)) {
+      this.event({
+        magnitude: 0,
+        valence: 'neutral',
+        importance: 0,
+        actor,
+        target,
+        outcome: 'none',
+        description,
+        ...chainRef(chain, 'cancel'),
+      });
+    }
+    if (chain !== null) this.resolved.delete(chain);
+    return null;
   }
 
   // ------------------------------------------------------------------
@@ -106,7 +138,12 @@ export class FallenRoadSignals {
 
   /** Called once the release has been fully handled. */
   swipeDone(): void {
-    this.swipeChain = null;
+    this.swipeChain = this.close(
+      this.swipeChain,
+      'self',
+      'other',
+      'player swing is held back'
+    );
   }
 
   strikeLanded(
@@ -181,6 +218,7 @@ export class FallenRoadSignals {
   // ------------------------------------------------------------------
 
   burstStart(weapon: WeaponDefinition, firstHitAt: number): void {
+    this.burstCutShort();
     this.burstChain = this.bus.openChain('burst');
     const burst = weapon.burst;
     this.event({
@@ -218,7 +256,17 @@ export class FallenRoadSignals {
       base: 'enemy_hit',
       ...chainRef(this.burstChain, last ? 'end' : 'progress'),
     });
-    if (last) this.burstChain = null;
+    if (last) this.burstCutShort();
+  }
+
+  /** Closes the burst; a cancel only if it stopped before its last hit. */
+  burstCutShort(): void {
+    this.burstChain = this.close(
+      this.burstChain,
+      'self',
+      'other',
+      'player burst is cut short'
+    );
   }
 
   // ------------------------------------------------------------------
@@ -226,6 +274,7 @@ export class FallenRoadSignals {
   // ------------------------------------------------------------------
 
   enemyFelled(boss: boolean): void {
+    this.attackCalledOff();
     const chain = this.burstChain ?? this.swipeChain;
     this.event({
       magnitude: boss ? 1 : 0.6,
@@ -235,11 +284,12 @@ export class FallenRoadSignals {
       target: 'other',
       outcome: 'broke',
       description: boss ? 'player fells the boss' : 'player fells the enemy',
+      gauges: ['enemy_health'],
       sound: 'felled',
       base: boss ? 'boss_kill' : 'enemy_kill',
       ...chainRef(chain, 'end'),
     });
-    if (chain === this.burstChain) this.burstChain = null;
+    if (chain !== null && chain === this.burstChain) this.burstCutShort();
   }
 
   enemyGuardBroken(openUntil: number): void {
@@ -269,6 +319,7 @@ export class FallenRoadSignals {
   // ------------------------------------------------------------------
 
   enemyWindUp(attack: EnemyAttackDefinition, impactAt: number): void {
+    this.attackCalledOff();
     this.attackChain = this.bus.openChain('attack');
     this.bus.emit({
       kind: 'clock',
@@ -348,7 +399,20 @@ export class FallenRoadSignals {
 
   /** Called once the attack's impact has been fully handled. */
   attackDone(): void {
-    this.attackChain = null;
+    this.attackCalledOff();
+  }
+
+  /**
+   * The wind-up was dropped before impact (interrupted, staggered, guard
+   * broken, enemy killed). No-op once the attack has resolved.
+   */
+  attackCalledOff(): void {
+    this.attackChain = this.close(
+      this.attackChain,
+      'other',
+      'self',
+      'enemy attack is called off'
+    );
   }
 
   playerShieldBroken(): void {
@@ -376,6 +440,7 @@ export class FallenRoadSignals {
       target: 'self',
       outcome: 'broke',
       description: 'player falls',
+      gauges: ['health'],
       base: 'player_death',
       ...chainRef(this.attackChain, 'end'),
     });
@@ -384,16 +449,6 @@ export class FallenRoadSignals {
   // ------------------------------------------------------------------
   // Time and gauges
   // ------------------------------------------------------------------
-
-  hitStop(until: number, scale: number): void {
-    this.bus.emit({
-      kind: 'clock',
-      clock: 'timescale',
-      t: this.now,
-      value: scale,
-      until,
-    });
-  }
 
   gauges(frame: GaugeFrame): void {
     const t = this.now;
