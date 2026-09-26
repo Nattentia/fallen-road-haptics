@@ -22,6 +22,16 @@ jobs:
   evaluate:
     runs-on: macos-15
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        combo:
+          - { questions: choice, state: full }
+          - { questions: choice, state: desc }
+          - { questions: choice, state: fields }
+          - { questions: noul, state: full }
+          - { questions: noul, state: desc }
+          - { questions: noul, state: fields }
     env:
       MODEL: ${{ github.event.inputs.model || 'aac6fef/laya-multilingual-coreml-ane' }}
     steps:
@@ -38,9 +48,9 @@ jobs:
       - name: Evaluate
         run: |
           set -o pipefail
-          python tools/laya/evaluate.py --model "$MODEL" --out d5-report.json | tee d5-summary.md
+          python tools/laya/evaluate.py --model "$MODEL" --questions ${{ matrix.combo.questions }} --state ${{ matrix.combo.state }} --out d5-report.json | tee d5-summary.md
           cat d5-summary.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
-          name: d5-report
+          name: d5-${{ matrix.combo.questions }}-${{ matrix.combo.state }}
           path: d5-report.json

@@ -194,7 +194,7 @@
     ],
     [
       "a truck crashes into a wall.",
-      "a large lorry slams into a brick wall."
+      "a big truck slams into a wall."
     ]
   ],
   "anchors": [
@@ -228,5 +228,87 @@
       "state": "skis slide over fresh snow.",
       "max": 0.5
     }
-  ]
+  ],
+  "fields": {
+    "a bike rides on a smooth track.": "mover: bike. action: ride. target: smooth track.",
+    "a bike rides over cobblestones.": "mover: bike. action: ride. target: cobblestones.",
+    "a blade scrapes along a stone wall.": "mover: blade. action: scrape. target: stone wall.",
+    "a blade slices through silk.": "mover: blade. action: slice. target: silk.",
+    "a boulder rolls onto the road.": "mover: boulder. action: roll. target: road.",
+    "a bowling ball drops onto the floor.": "mover: bowling ball. action: drop. target: floor.",
+    "a brick scrapes across concrete.": "mover: brick. action: scrape. target: concrete.",
+    "a cloth wipes over metal.": "mover: cloth. action: wipe. target: metal.",
+    "a feather lands on a table.": "mover: feather. action: land. target: table.",
+    "a file rasps against metal.": "mover: file. action: rasp. target: metal.",
+    "a finger slides across glass.": "mover: finger. action: slide. target: glass.",
+    "a fist hits a pillow.": "mover: fist. action: hit. target: pillow.",
+    "a glass bottle falls and breaks on the ground.": "mover: glass bottle. action: fall and break. target: ground.",
+    "a glass bottle hits a stone floor.": "mover: glass bottle. action: hit. target: stone floor.",
+    "a glass bottle shatters on the floor.": "mover: glass bottle. action: shatter. target: floor.",
+    "a hammer hits an anvil.": "mover: hammer. action: hit. target: anvil.",
+    "a hammer hits wet clay.": "mover: hammer. action: hit. target: wet clay.",
+    "a hand brushes silk.": "mover: hand. action: brush. target: silk.",
+    "a hand brushes tree bark.": "mover: hand. action: brush. target: tree bark.",
+    "a leaf falls onto the road.": "mover: leaf. action: fall. target: road.",
+    "a nail is pressed into butter.": "mover: nail. action: press. target: butter.",
+    "a nail is struck into oak.": "mover: nail. action: strike. target: oak.",
+    "a paper cup falls onto a cart.": "mover: paper cup. action: fall. target: cart.",
+    "a rubber ball hits a carpet.": "mover: rubber ball. action: hit. target: carpet.",
+    "a sled drags over rocks.": "mover: sled. action: drag. target: rocks.",
+    "a spoon taps a ceramic plate.": "mover: spoon. action: tap. target: ceramic plate.",
+    "a spoon taps a sponge.": "mover: spoon. action: tap. target: sponge.",
+    "a steel sword strikes an iron shield.": "mover: steel sword. action: strike. target: iron shield.",
+    "a tennis ball drops onto the floor.": "mover: tennis ball. action: drop. target: floor.",
+    "a truck crashes into a wall.": "mover: truck. action: crash. target: wall.",
+    "an anvil falls onto a cart.": "mover: anvil. action: fall. target: cart.",
+    "an ice cube slides on marble.": "mover: ice cube. action: slide. target: marble.",
+    "boots stomp on frozen ground.": "mover: boots. action: stomp. target: frozen ground.",
+    "boots stomp on mud.": "mover: boots. action: stomp. target: mud.",
+    "enemy slash attack hits player.": "mover: enemy weapon. action: slash. target: player.",
+    "enemy thrust attack hits player.": "mover: enemy weapon. action: thrust. target: player.",
+    "player bashes enemy head with paper mace.": "mover: paper mace. action: bash. target: enemy head.",
+    "player bashes enemy legs with paper mace.": "mover: paper mace. action: bash. target: enemy legs.",
+    "player bashes enemy torso with paper mace.": "mover: paper mace. action: bash. target: enemy torso.",
+    "player heavily smashes enemy head with paper hammer.": "mover: paper hammer. action: heavy smash. target: enemy head.",
+    "player shield blocks enemy slash attack.": "mover: enemy weapon. action: slash. target: player shield.",
+    "player shield breaks.": "mover: player shield. action: break. target: player shield.",
+    "player slashes enemy torso with paper sword.": "mover: paper sword. action: slash. target: enemy torso.",
+    "player smashes enemy torso with paper hammer.": "mover: paper hammer. action: smash. target: enemy torso.",
+    "player stabs enemy head with paper daggers.": "mover: paper daggers. action: stab. target: enemy head.",
+    "player stabs enemy legs with paper daggers.": "mover: paper daggers. action: stab. target: enemy legs.",
+    "player stabs enemy torso with paper daggers.": "mover: paper daggers. action: stab. target: enemy torso.",
+    "player thrusts at enemy torso with paper spear.": "mover: paper spear. action: thrust. target: enemy torso.",
+    "sandpaper rubs against wood.": "mover: sandpaper. action: rub. target: wood.",
+    "skis slide over fresh snow.": "mover: skis. action: slide. target: fresh snow.",
+    "the car drives along a gravel road.": "mover: car. action: drive. target: gravel road.",
+    "the player cuts across the enemy's body with a paper sword.": "mover: paper sword. action: cut across. target: enemy body.",
+    "the player hits the enemy's body hard with a paper hammer.": "mover: paper hammer. action: hit hard. target: enemy body.",
+    "the player pokes the enemy's chest with small paper knives.": "mover: small paper knives. action: poke. target: enemy chest.",
+    "tyres roll over asphalt.": "mover: tyres. action: roll. target: asphalt.",
+    "tyres roll over grass.": "mover: tyres. action: roll. target: grass.",
+    "tyres roll over gravel.": "mover: tyres. action: roll. target: gravel.",
+    "tyres skid across gravel.": "mover: tyres. action: skid. target: gravel.",
+    "a big truck slams into a wall.": "mover: big truck. action: slam. target: wall."
+  },
+  "noul": {
+    "hardness": [
+      "What is touched is hard.",
+      "What is touched is soft."
+    ],
+    "weight": [
+      "What strikes or is struck is heavy.",
+      "What strikes or is struck is light."
+    ],
+    "roughness": [
+      "The contact feels rough.",
+      "The contact feels smooth."
+    ],
+    "contact": [
+      "A sharp edge slices.",
+      "A point pierces.",
+      "A heavy mass crushes.",
+      "A surface scrapes along.",
+      "Something fragile shatters."
+    ]
+  }
 }

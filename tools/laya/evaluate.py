@@ -1,22 +1,28 @@
 """D5: how far the live questions can be trusted (runs on a macOS CI runner).
 
-Asks a Laya checkpoint the live questions (tools/laya/vocabulary.json) about
-the states in tools/laya/validation.json, forwards and with the options in
-reverse order, and reports per question:
+Asks a Laya checkpoint about the states in tools/laya/validation.json and
+reports, per question:
   order       share of relative-order checks the answers get right
   paraphrase  mean change of the answer when the same moment is reworded
   anchors     share of loose everyday anchors met
   contact     share of unambiguous contact kinds named (chance: 0.2)
-  bias        mean change of the answer when the options are reversed
+  bias        choice: change when the options are reversed;
+              true/false: disagreement between the two opposite statements
   spread      spread of the answer across all states (flat answers say nothing)
-  decided     mean decidedness (1 - normalized entropy)
+  decided     mean decidedness (reported only)
 Every metric is also computed for a model that answers at random (500 runs):
-a question passes only when each of its metrics beats that chance level (95th
-percentile) and meets PASS. Failing questions move to deterministic rules
-(v4 4). The chance check matters: random answers sit near the middle of a
-scale, so they look "stable" under rewording and reordering.
+a question passes only when each metric beats that chance level (95th
+percentile) and meets PASS. Random answers sit near the middle of a scale and
+look "stable", which is why the chance comparison is needed.
 
-    python tools/laya/evaluate.py --model aac6fef/laya-multilingual-coreml-ane --out report.json
+Two ways to ask, three ways to state the moment:
+  --questions choice  the live questions (vocabulary.json), 5 ordered options
+  --questions noul    true/false statements: a scale is the mean of "is heavy"
+                      and not "is light"; the contact kind is the largest of
+                      five statement probabilities
+  --state full        description + result, size, parties (what the phone sends)
+  --state desc        description only
+  --state fields      "mover: …. action: …. target: …." (validation.json)
 """
 
 import argparse
@@ -27,11 +33,11 @@ from pathlib import Path
 
 PASS = {"order": 0.75, "paraphrase": 0.15, "anchors": 0.75, "contact": 0.6, "bias": 0.15}
 LOWER_IS_BETTER = {"paraphrase", "bias"}
+IDS = ["hardness", "weight", "roughness", "contact"]
 HERE = Path(__file__).parent
 
 
 def expected(p):
-    """Expected position on a 0..1 scale for an ordered choice."""
     k = len(p)
     return sum(pi * i / (k - 1) for i, pi in enumerate(p))
 
@@ -46,96 +52,122 @@ def argmax(p):
     return max(range(len(p)), key=lambda i: p[i])
 
 
-def questions_with_reversed(vocab):
-    """Live question definitions plus each with its options reversed."""
+def build_questions(vocab, validation, mode):
     out = {}
-    for q in vocab["questions"]:
-        d = {"type": q["type"], "instructions": q["instructions"], "criteria": q["criteria"]}
-        out[q["id"]] = d
-        out[q["id"] + "~rev"] = {**d, "criteria": list(reversed(q["criteria"]))}
+    if mode == "choice":
+        for q in vocab["questions"]:
+            d = {"type": q["type"], "instructions": q["instructions"], "criteria": q["criteria"]}
+            out[q["id"]] = d
+            out[q["id"] + "~rev"] = {**d, "criteria": list(reversed(q["criteria"]))}
+        return out
+    for qid, statements in validation["noul"].items():
+        names = ["pos", "neg"] if qid != "contact" else [str(i) for i in range(len(statements))]
+        for name, text in zip(names, statements):
+            out[f"{qid}~{name}"] = {"type": "noul", "instructions": text}
     return out
 
 
-def evaluate(ask, vocab, validation):
-    """`ask(text, questions)` returns {qid: [probabilities in option order]}."""
-    context = validation["context"]
-    questions = questions_with_reversed(vocab)
-    ids = [q["id"] for q in vocab["questions"]]
+def shape(raw, mode):
+    """Raw answers -> {qid: {"p": answer, "a": x, "b": y}} ("a"/"b" for bias)."""
+    out = {}
+    if mode == "choice":
+        for qid in IDS:
+            fwd, rev = raw[qid], list(reversed(raw[qid + "~rev"]))
+            out[qid] = {"p": fwd, "a": fwd, "b": rev}
+        return out
+    for qid in IDS:
+        if qid == "contact":
+            ps = [raw[f"contact~{i}"][1] for i in range(5)]  # noul options: [false, true]
+            total = sum(ps) or 1.0
+            out[qid] = {"p": [x / total for x in ps], "a": None, "b": None}
+        else:
+            p1, p2 = raw[f"{qid}~pos"][1], raw[f"{qid}~neg"][1]
+            v = (p1 + 1 - p2) / 2
+            out[qid] = {"p": [1 - v, v], "a": [1 - p1, p1], "b": [p2, 1 - p2]}
+    return out
+
+
+def state_text(state, validation, mode):
+    if mode == "full":
+        return " ".join([state] + validation["context"])
+    if mode == "fields":
+        return validation["fields"][state]
+    return state
+
+
+def evaluate(get, validation):
+    """`get(state)` returns shaped answers for one validation state."""
     cache = {}
 
     def answers(state):
         if state not in cache:
-            cache[state] = ask(" ".join([state] + context), questions)
+            cache[state] = get(state)
         return cache[state]
 
     def value(state, qid):
-        return expected(answers(state)[qid])
+        return expected(answers(state)[qid]["p"])
 
-    report = {qid: {} for qid in ids}
-
-    for qid in ids:
+    report = {qid: {} for qid in IDS}
+    for qid in IDS[:3]:
         checks = [c for c in validation["order"] if c["question"] == qid]
-        if checks:
-            ok = sum(value(c["higher"], qid) > value(c["lower"], qid) for c in checks)
-            report[qid]["order"] = ok / len(checks)
+        report[qid]["order"] = sum(value(c["higher"], qid) > value(c["lower"], qid) for c in checks) / len(checks)
         anchors = [a for a in validation["anchors"] if a["question"] == qid]
-        if anchors:
-            ok = sum(
-                a.get("min", 0) <= value(a["state"], qid) <= a.get("max", 1) for a in anchors
-            )
-            report[qid]["anchors"] = ok / len(anchors)
+        report[qid]["anchors"] = sum(
+            a.get("min", 0) <= value(a["state"], qid) <= a.get("max", 1) for a in anchors
+        ) / len(anchors)
 
-    for qid in ids:
+    for qid in IDS:
         diffs = []
         for a, b in validation["paraphrase"]:
             if qid == "contact":
-                diffs.append(0.0 if argmax(answers(a)[qid]) == argmax(answers(b)[qid]) else 1.0)
+                diffs.append(0.0 if argmax(answers(a)[qid]["p"]) == argmax(answers(b)[qid]["p"]) else 1.0)
             else:
                 diffs.append(abs(value(a, qid) - value(b, qid)))
         report[qid]["paraphrase"] = sum(diffs) / len(diffs)
 
     contact = validation["contact"]
     report["contact"]["contact"] = sum(
-        argmax(answers(c["state"])["contact"]) == c["expect"] for c in contact
+        argmax(answers(c["state"])["contact"]["p"]) == c["expect"] for c in contact
     ) / len(contact)
 
     states = list(cache)
-    for qid in ids:
+    for qid in IDS:
         diffs, decided = [], []
         for s in states:
-            fwd = answers(s)[qid]
-            rev = list(reversed(answers(s)[qid + "~rev"]))
-            decided.append(decidedness(fwd))
+            ans = answers(s)[qid]
+            decided.append(decidedness(ans["p"]))
+            if ans["a"] is None:
+                continue
             if qid == "contact":
-                diffs.append(0.0 if argmax(fwd) == argmax(rev) else 1.0)
+                diffs.append(0.0 if argmax(ans["a"]) == argmax(ans["b"]) else 1.0)
             else:
-                diffs.append(abs(expected(fwd) - expected(rev)))
-        report[qid]["bias"] = sum(diffs) / len(diffs)
+                diffs.append(abs(expected(ans["a"]) - expected(ans["b"])))
+        if diffs:
+            report[qid]["bias"] = sum(diffs) / len(diffs)
         report[qid]["decided"] = sum(decided) / len(decided)
         if qid != "contact":
             vals = [value(s, qid) for s in states]
             m = sum(vals) / len(vals)
             report[qid]["spread"] = math.sqrt(sum((v - m) ** 2 for v in vals) / len(vals))
-
-    raw = {s: {q: [round(x, 4) for x in p] for q, p in a.items()} for s, a in cache.items()}
-    return report, raw
+    return report, cache
 
 
-def chance(vocab, validation, runs=500, seed=3):
+def chance(questions, mode, validation, runs=500, seed=3):
     """Per question and metric, the level a random model reaches 95% of the time."""
     rng = random.Random(seed)
 
-    def ask(text, questions):
-        out = {}
+    def get(state):
+        raw = {}
         for qid, q in questions.items():
-            w = [-math.log(1 - rng.random()) for _ in q["criteria"]]
+            k = len(q.get("criteria") or [0, 1])
+            w = [-math.log(1 - rng.random()) for _ in range(k)]
             t = sum(w)
-            out[qid] = [x / t for x in w]
-        return out
+            raw[qid] = [x / t for x in w]
+        return shape(raw, mode)
 
     samples = {}
     for _ in range(runs):
-        report, _ = evaluate(ask, vocab, validation)
+        report, _ = evaluate(get, validation)
         for qid, r in report.items():
             for key, v in r.items():
                 samples.setdefault(qid, {}).setdefault(key, []).append(v)
@@ -149,7 +181,6 @@ def chance(vocab, validation, runs=500, seed=3):
 
 
 def judge(report, bounds):
-    """Adds `pass` and per-metric verdicts: beat chance, and meet PASS."""
     for qid, r in report.items():
         verdicts = {}
         for key, v in list(r.items()):
@@ -160,10 +191,7 @@ def judge(report, bounds):
                 continue
             low = key in LOWER_IS_BETTER
             best = 0.0 if low else 1.0
-            if limit == best:
-                ok = v == best  # chance already reaches the ceiling
-            else:
-                ok = v < limit if low else v > limit
+            ok = v == best if limit == best else (v < limit if low else v > limit)
             if key in PASS:
                 ok = ok and (v <= PASS[key] if low else v >= PASS[key])
             verdicts[key] = ok
@@ -173,9 +201,9 @@ def judge(report, bounds):
     return report
 
 
-def markdown(model, report):
+def markdown(title, report):
     keys = ["order", "paraphrase", "anchors", "contact", "bias", "spread", "decided", "pass"]
-    lines = [f"### D5: {model}", "", "| question | " + " | ".join(keys) + " |",
+    lines = [f"### D5: {title}", "", "| question | " + " | ".join(keys) + " |",
              "|---" * (len(keys) + 1) + "|"]
     for qid, r in report.items():
         cells = []
@@ -189,15 +217,26 @@ def markdown(model, report):
                 mark = "" if r["verdicts"].get(k, True) else " ✗"
                 cells.append(f"{v:.2f} ({r['chance'].get(k, 0):.2f}){mark}")
         lines.append(f"| {qid} | " + " | ".join(cells) + " |")
-    lines.append("")
-    lines.append("Cells: value (chance level). ✗ = not better than chance or misses the bar "
-                 "(order ≥ 0.75, paraphrase ≤ 0.15, anchors ≥ 0.75, contact ≥ 0.6, bias ≤ 0.15).")
+    lines += ["", "Cells: value (chance level). ✗ = not better than chance or misses the bar "
+              "(order ≥ 0.75, paraphrase ≤ 0.15, anchors ≥ 0.75, contact ≥ 0.6, bias ≤ 0.15)."]
     return "\n".join(lines)
+
+
+def run(ask, vocab, validation, qmode, smode):
+    """`ask(text, questions)` returns {qid: [probabilities in option order]}."""
+    questions = build_questions(vocab, validation, qmode)
+    report, cache = evaluate(
+        lambda s: shape(ask(state_text(s, validation, smode), questions), qmode), validation
+    )
+    judge(report, chance(questions, qmode, validation))
+    return report, cache
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", required=True)
+    parser.add_argument("--questions", choices=["choice", "noul"], default="choice")
+    parser.add_argument("--state", choices=["full", "desc", "fields"], default="full")
     parser.add_argument("--cache", default=".laya-cache")
     parser.add_argument("--out", default="d5-report.json")
     args = parser.parse_args()
@@ -214,10 +253,10 @@ def main():
 
     vocab = json.loads((HERE / "vocabulary.json").read_text(encoding="utf-8"))
     validation = json.loads((HERE / "validation.json").read_text(encoding="utf-8"))
-    report, raw = evaluate(ask, vocab, validation)
-    judge(report, chance(vocab, validation))
-    Path(args.out).write_text(json.dumps({"model": args.model, "report": report, "answers": raw}, indent=2))
-    print(markdown(args.model, report))
+    report, cache = run(ask, vocab, validation, args.questions, args.state)
+    title = f"{args.model} · {args.questions} · {args.state}"
+    Path(args.out).write_text(json.dumps({"title": title, "report": report, "answers": cache}, indent=2))
+    print(markdown(title, report))
 
 
 if __name__ == "__main__":
