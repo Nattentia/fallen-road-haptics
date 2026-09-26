@@ -124,6 +124,29 @@ describe('phrase synthesis', () => {
     ).toEqual([]);
   });
 
+  it('lets gauge decoration add parts but never change the skeleton or size order (5-2)', () => {
+    const kinds = (shapes: Shape[]) =>
+      shapes.map((x) => x.events.map((e) => e.kind).join(','));
+    const decorations = [
+      { instability: 1, advantage: 0 },
+      { instability: 0, advantage: 1 },
+      { instability: 0.6, advantage: 0.6 },
+    ];
+    for (const c of everyCase())
+      for (const d of decorations) {
+        const deco = (seed: number) => ({ ...calm(seed), ...d });
+        const plain = kinds(synthesize(input({ ...c, decoration: calm(4) })));
+        const decorated = kinds(synthesize(input({ ...c, decoration: deco(4) })));
+        // Decoration only appends parts after the skeleton's own.
+        expect(decorated.slice(0, plain.length)).toEqual(plain);
+        expect(
+          energy(synthesize(input({ ...c, magnitude: 0.9, decoration: deco(4) })))
+        ).toBeGreaterThanOrEqual(
+          energy(synthesize(input({ ...c, magnitude: 0.2, decoration: deco(4) })))
+        );
+      }
+  });
+
   it('roughens and shortens when a gauge that matters runs low', () => {
     const steady = synthesize(input({ valence: 'bad' }));
     const shaky = synthesize(
