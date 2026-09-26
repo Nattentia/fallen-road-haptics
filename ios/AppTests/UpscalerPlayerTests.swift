@@ -172,4 +172,28 @@ final class UpscalerPlayerTests: XCTestCase {
         XCTAssertEqual(backend.calls, [])
         XCTAssertEqual(logs, ["unknown command future"])
     }
+
+    func testBaseOnlyModePlaysBasesButNoLayer() {
+        player.apply(.defineBase(BaseVibration(name: "plain", kind: .continuous, intensity: 0.8, sharpness: 0.4, durationMs: 120)))
+        player.apply(.hold(voice: "v", stream: "s", at: 0, intensity: 0.3, sharpness: 0.5))
+        player.setMode(.baseOnly)
+        XCTAssertNil(player.voices["v"])
+        backend.calls = []
+        player.apply(.play(voice: "v", score: score("a", at: 0)))
+        player.apply(.hold(voice: "v", stream: "s", at: 0, intensity: 0.3, sharpness: 0.5))
+        player.apply(.base(name: "plain", at: 0, gain: 0.9))
+        let expected: [FakeBackend.Call] = [.base("plain", 0.9, 0)]
+        XCTAssertEqual(backend.calls, expected)
+    }
+
+    func testOffModePlaysNothing() {
+        player.apply(.defineBase(BaseVibration(name: "plain", kind: .continuous, intensity: 0.8, sharpness: 0.4, durationMs: 120)))
+        player.setMode(.off)
+        player.apply(.base(name: "plain", at: 0, gain: 1))
+        player.apply(.play(voice: "v", score: score("a", at: 0)))
+        XCTAssertEqual(backend.calls, [])
+        player.setMode(.full)
+        player.apply(.base(name: "plain", at: 0, gain: 1))
+        XCTAssertEqual(backend.calls.count, 1)
+    }
 }

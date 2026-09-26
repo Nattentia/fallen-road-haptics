@@ -32,8 +32,9 @@ const config: Phaser.Types.Core.GameConfig = {
 
 document.addEventListener('DOMContentLoaded', () => {
   // The upscaler Lab (opened from the iOS app) replaces the game page.
-  if (new URLSearchParams(window.location.search).has('lab')) {
-    void import('./lab/lab').then((lab) => lab.mountLab());
+  const lab = new URLSearchParams(window.location.search).get('lab');
+  if (lab !== null) {
+    void import('./lab/lab').then((m) => m.mountLab(lab));
     return;
   }
   const game = new Game(config);

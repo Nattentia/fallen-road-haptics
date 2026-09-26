@@ -6,7 +6,6 @@ import WebKit
 /// the Laya lab.
 final class GameViewController: UIViewController, WKScriptMessageHandler {
     private var webView: WKWebView!
-    private let haptics = HapticPlayer()
     private let log = LatencyLog()
     private let recorder = UpscalerRecorder()
     private lazy var backend = CoreHapticsBackend(jsNow: { [weak self] in
@@ -59,7 +58,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         setUpOverlay()
         statsTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             guard let self else { return }
-            self.statsLabel.text = self.log.summary(hapticsOn: self.haptics.enabled)
+            self.statsLabel.text = self.log.summary(hapticsOn: self.upscaler.mode != .off)
         }
     }
 
@@ -117,8 +116,9 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
                 haptic: false, syncRtt: log.syncRtt
             ))
         case "base":
+            // Logged only: the base itself arrives as an upscaler command.
             let action = body["action"] as? String ?? ""
-            let issued = haptics.base()
+            let issued = false
             let done = Clock.nowMs()
             log.add(.init(
                 seq: seq, kind: "base", detail: action, speed: 0, t0: nil,
@@ -203,7 +203,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         statsLabel.isUserInteractionEnabled = false
 
         let buttons = UIStackView(arrangedSubviews: [
-            makeButton("햅틱", #selector(toggleHaptics)),
+            makeButton("햅틱: \(UpscalerPlayer.Mode.full.rawValue)", #selector(toggleHaptics)),
             makeButton("기록 저장", #selector(exportLog)),
             makeButton("Lab", #selector(openLab)),
             makeButton("업스케일 Lab", #selector(openUpscalerLab)),
@@ -234,8 +234,12 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         return button
     }
 
-    @objc private func toggleHaptics() {
-        haptics.enabled.toggle()
+    /// Cycles 기본+업스케일 → 기본만 → 끔 for side-by-side comparison.
+    @objc private func toggleHaptics(_ sender: UIButton) {
+        let all = UpscalerPlayer.Mode.allCases
+        let next = all[(all.firstIndex(of: upscaler.mode)! + 1) % all.count]
+        upscaler.setMode(next)
+        sender.configuration?.title = "햅틱: \(next.rawValue)"
     }
 
     @objc private func exportLog() {

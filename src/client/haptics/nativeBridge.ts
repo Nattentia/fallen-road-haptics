@@ -1,10 +1,16 @@
 import type { Game } from 'phaser';
 import { CONTACT_EVENT, type ContactSignal } from '../combat/contactEvents';
 import { SFX_EVENT, type SfxEvent } from '../audio/sfx';
-import { BASE_HAPTIC_EVENT, type BaseHapticEvent } from './baseHaptics';
+import {
+  BASE_HAPTIC_EVENT,
+  BASE_VIBRATIONS,
+  type BaseHapticEvent,
+} from './baseHaptics';
 import { SIGNAL_EVENT } from './signalBus';
 import type { Signal } from '../../shared/haptics/signals';
-import type { Command } from '../../shared/upscaler/contract';
+import type { Command, Hint } from '../../shared/upscaler/contract';
+import { UpscalerLink } from '../../shared/upscaler/link';
+import { HapticUpscaler } from '../../shared/upscaler/upscaler';
 
 /**
  * Bridge to the iOS wrapper app (ios/). Inside the app, game signals are
@@ -17,6 +23,7 @@ type NativeHandler = { postMessage: (message: unknown) => void };
 type NativeWindow = Window & {
   webkit?: { messageHandlers?: { hs?: NativeHandler } };
   __hsPong?: (sentAt: number, swiftMs: number) => void;
+  __hsHint?: (hint: Hint) => void;
 };
 
 const SYNC_INTERVAL_MS = 2000;
@@ -72,6 +79,15 @@ export const installClockSync = (): boolean => {
 export const installNativeBridge = (game: Game): boolean => {
   if (!installClockSync()) return false;
   const post = postNative;
+
+  // Game → upscaler → native player.
+  const link = new UpscalerLink(new HapticUpscaler(), sendCommands);
+  link.define(BASE_VIBRATIONS);
+  (window as NativeWindow).__hsHint = (hint) => link.hint(hint);
+  game.events.on(BASE_HAPTIC_EVENT, (e: BaseHapticEvent) =>
+    link.base(e.action)
+  );
+  game.events.on(SIGNAL_EVENT, (signal: Signal) => link.signal(signal));
 
   game.events.on(CONTACT_EVENT, (s: ContactSignal) => {
     post({

@@ -1,4 +1,5 @@
 import type * as Phaser from 'phaser';
+import type { BaseVibration } from '../../shared/upscaler/contract';
 
 /**
  * The game's own vibration, as a typical mobile game ships it: one plain
@@ -31,3 +32,31 @@ export const playBaseHaptic = (
   const event: BaseHapticEvent = { action, t: scene.time.now };
   scene.game.events.emit(BASE_HAPTIC_EVENT, event);
 };
+
+/** The one plain buzz every action plays: any vibration motor could do it. */
+const PLAIN_BUZZ = {
+  kind: 'continuous',
+  intensity: 0.8,
+  sharpness: 0.4,
+  durationMs: 120,
+} as const;
+
+const ACTIONS: readonly BaseHapticAction[] = [
+  'player_hit',
+  'player_block',
+  'player_guard_break',
+  'player_death',
+  'enemy_hit',
+  'enemy_block',
+  'parried',
+  'enemy_guard_break',
+  'counter',
+  'burst_start',
+  'enemy_kill',
+  'boss_kill',
+];
+
+/** The game's base vibrations as it registers them with the upscaler. */
+export const BASE_VIBRATIONS: readonly BaseVibration[] = ACTIONS.map(
+  (name) => ({ name, ...PLAIN_BUZZ })
+);

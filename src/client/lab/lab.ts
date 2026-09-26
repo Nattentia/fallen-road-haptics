@@ -4,6 +4,12 @@ import {
   sendCommands,
 } from '../haptics/nativeBridge';
 import { LAB_BASE, LEAD, S1_TRIALS, type Trial } from './s1Trials';
+import { S2_TRIALS } from './s2Trials';
+
+const SESSIONS: Record<string, { title: string; trials: readonly Trial[] }> = {
+  s1: { title: 'S1 · 재생기 확인', trials: S1_TRIALS },
+  s2: { title: 'S2 · 부품과 세기 균형', trials: S2_TRIALS },
+};
 
 /**
  * Upscaler Lab page (game.html?lab=1). Runs the S1 session: automatic device
@@ -61,7 +67,9 @@ const shuffled = <T>(items: readonly T[]): T[] => {
   return out;
 };
 
-export const mountLab = (): void => {
+export const mountLab = (session = 's1'): void => {
+  const current = SESSIONS[session] ?? SESSIONS.s1!;
+  const sessionId = SESSIONS[session] ? session : 's1';
   const inApp = installClockSync();
   const probes: Record<string, unknown> = {};
   const ratings = new Map<string, Rating>();
@@ -75,7 +83,17 @@ export const mountLab = (): void => {
   const root = el('div', '', 'max-width:900px;margin:0 auto');
   document.body.append(root);
 
-  root.append(el('h2', '업스케일 Lab · S1', 'margin:4px 0'));
+  root.append(el('h2', `업스케일 Lab · ${current.title}`, 'margin:4px 0'));
+  const switcher = el('div');
+  for (const [id, s] of Object.entries(SESSIONS))
+    switcher.append(
+      button(
+        s.title,
+        () => mountLab(id),
+        id === sessionId ? 'background:#4a3a1c' : ''
+      )
+    );
+  root.append(switcher);
   root.append(
     el(
       'p',
@@ -126,7 +144,7 @@ export const mountLab = (): void => {
     sendCommands(variant.commands(performance.now() + LEAD, `lab-${voiceSeq}`));
   };
 
-  for (const trial of S1_TRIALS) {
+  for (const trial of current.trials) {
     const box = el(
       'section',
       '',
@@ -183,11 +201,11 @@ export const mountLab = (): void => {
       () => {
         const answered = [...ratings.values()].filter((r) => r.answer);
         const json = JSON.stringify(
-          { session: 'S1', version: 1, probes, ratings: answered },
+          { session: sessionId, version: 1, probes, ratings: answered },
           null,
           2
         );
-        const ok = postNative({ type: 'labSave', name: 's1', json });
+        const ok = postNative({ type: 'labSave', name: sessionId, json });
         saveStatus.textContent = ok
           ? ` 저장함 (답 ${answered.length}개)`
           : ' 앱 안에서만 저장됩니다';

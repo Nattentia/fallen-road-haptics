@@ -37,7 +37,15 @@ final class UpscalerPlayer {
         var holds: [String: Int] = [:]
     }
 
+    /// What reaches the device, for side-by-side comparison.
+    enum Mode: String, CaseIterable {
+        case full = "기본+업스케일"
+        case baseOnly = "기본만"
+        case off = "끔"
+    }
+
     private let backend: HapticBackend
+    private(set) var mode: Mode = .full
     private(set) var voices: [String: Voice] = [:]
     private(set) var bases: [String: BaseVibration] = [:]
     /// Receives one line per notable decision (skipped commands, failures).
@@ -47,12 +55,31 @@ final class UpscalerPlayer {
         self.backend = backend
     }
 
+    /// Switching away from `full` fades out everything the upscaler holds.
+    func setMode(_ newMode: Mode) {
+        mode = newMode
+        guard newMode != .full else { return }
+        let now = backend.nowMs
+        for voice in Array(voices.keys) { release(voice, at: now, fadeMs: 20) }
+    }
+
     func apply(_ command: UpscalerCommand) {
         prune()
+        if mode != .full {
+            switch command {
+            case .play, .hold, .drive, .ask:
+                return
+            case .revise(let voice, let from, _):
+                return cut(voice, from: from)
+            default:
+                break
+            }
+        }
         switch command {
         case .defineBase(let base):
             bases[base.name] = base
         case .base(let name, let at, let gain):
+            guard mode != .off else { return }
             guard let base = bases[name] else { return log("base \(name) not defined") }
             if !backend.playBase(base, gain: min(1, max(0, gain)), atMs: at) { log("base \(name) not played") }
         case .play(let voice, let score):
