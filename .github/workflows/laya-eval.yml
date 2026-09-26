@@ -1,7 +1,9 @@
 name: Evaluate Laya live questions (D5)
 
-# Asks a Laya checkpoint the live questions about the validation states and
-# reports, per question, whether its answers beat chance (tools/laya/evaluate.py).
+# Asks Laya the live questions about the validation states and reports, per
+# question, whether its answers beat chance (tools/laya/evaluate.py). The
+# current matrix is the facts experiment: does Laya use object facts placed in
+# the text, and does it beat the deterministic rule baseline reading them?
 # Report only: it never blocks the app build.
 
 on:
@@ -12,15 +14,9 @@ on:
       - 'tools/laya/validation.json'
       - 'tools/laya/vocabulary.json'
       - 'tools/laya/rubric.json'
+      - 'tools/laya/facts.json'
       - '.github/workflows/laya-eval.yml'
   workflow_dispatch:
-    inputs:
-      model:
-        description: Hugging Face repo of a Core ML Laya checkpoint
-        default: aac6fef/laya-multilingual-coreml-ane
-      criteria:
-        description: plain labels, or labels with example-object criteria (rubric.json)
-        default: rubric
 
 jobs:
   evaluate:
@@ -29,33 +25,34 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # laya-multilingual-coreml: same weights as the phone's ANE bundle,
+        # 1024 tokens instead of 96, so facts fit.
         combo:
-          - { questions: choice, state: full }
-          - { questions: choice, state: desc }
-          - { questions: choice, state: fields }
-          - { questions: noul, state: full }
-          - { questions: noul, state: desc }
-          - { questions: noul, state: fields }
-    env:
-      MODEL: ${{ github.event.inputs.model || 'aac6fef/laya-multilingual-coreml-ane' }}
-      CRITERIA: ${{ github.event.inputs.criteria || 'rubric' }}
+          - { model: rule, state: desc, criteria: plain, facts: dict }
+          - { model: aac6fef/laya-multilingual-coreml, state: desc, criteria: plain, facts: none }
+          - { model: aac6fef/laya-multilingual-coreml, state: desc, criteria: plain, facts: dict }
+          - { model: aac6fef/laya-multilingual-coreml, state: full, criteria: plain, facts: dict }
+          - { model: aac6fef/laya-multilingual-coreml, state: fields, criteria: plain, facts: dict }
+          - { model: aac6fef/laya-multilingual-coreml, state: desc, criteria: rubric, facts: dict }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - uses: actions/cache@v4
+        if: matrix.combo.model != 'rule'
         with:
           path: .laya-cache
-          key: laya-eval-${{ env.MODEL }}
+          key: laya-eval-${{ matrix.combo.model }}
       - name: Install laya-coreml
+        if: matrix.combo.model != 'rule'
         run: pip install 'laya-coreml @ git+https://github.com/mizorewww/laya-coreml@4619e0483f07adf39068532e85b42ec2347edb83'
       - name: Evaluate
         run: |
           set -o pipefail
-          python tools/laya/evaluate.py --model "$MODEL" --questions ${{ matrix.combo.questions }} --state ${{ matrix.combo.state }} --criteria "$CRITERIA" --out d5-report.json | tee d5-summary.md
+          python tools/laya/evaluate.py --model "${{ matrix.combo.model }}" --questions choice --state ${{ matrix.combo.state }} --criteria ${{ matrix.combo.criteria }} --facts ${{ matrix.combo.facts }} --out d5-report.json | tee d5-summary.md
           cat d5-summary.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
-          name: d5-${{ matrix.combo.questions }}-${{ matrix.combo.state }}-${{ env.CRITERIA }}
+          name: d5-${{ strategy.job-index }}-${{ matrix.combo.state }}-${{ matrix.combo.criteria }}-${{ matrix.combo.facts }}
           path: d5-report.json

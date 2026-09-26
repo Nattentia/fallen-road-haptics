@@ -27,12 +27,22 @@ Two ways to ask, three ways to state the moment:
   --criteria plain    bare option labels
   --criteria rubric   each option (true/false side for noul) carries a short
                       criterion with example objects (rubric.json, option A)
+
+  --facts none        the moment alone
+  --facts dict        the moment followed by one sentence per object it names,
+                      from a game-agnostic object dictionary (facts.json), so
+                      the knowledge the answer needs is inside the text
+
+  --model rule        deterministic baseline instead of Laya: reads property
+                      words (hard, heavy, rough, sharp point...) from the text.
+                      Laya earns its place only by beating it.
 """
 
 import argparse
 import json
 import math
 import random
+import re
 from pathlib import Path
 
 PASS = {"order": 0.75, "paraphrase": 0.15, "anchors": 0.75, "contact": 0.6, "bias": 0.15}
@@ -102,12 +112,67 @@ def shape(raw, mode):
     return out
 
 
-def state_text(state, validation, mode):
+def matches(text, phrases):
+    """Phrases found in text: longest first, whole words, no overlaps, in text order."""
+    text, found = text.lower(), []
+    taken = [False] * len(text)
+    for key in sorted(phrases, key=len, reverse=True):
+        for m in re.finditer(r"\b%s\b" % re.escape(key), text):
+            if not any(taken[m.start() : m.end()]):
+                taken[m.start() : m.end()] = [True] * (m.end() - m.start())
+                found.append((m.start(), key))
+    return [k for _, k in sorted(found)]
+
+
+def state_text(state, validation, mode, facts=None):
     if mode == "full":
-        return " ".join([state] + validation["context"])
-    if mode == "fields":
-        return validation["fields"][state]
-    return state
+        text = " ".join([state] + validation["context"])
+    elif mode == "fields":
+        text = validation["fields"][state]
+    else:
+        text = state
+    if facts:
+        text = " ".join([text] + [facts[k] for k in matches(state, facts)])
+    return text
+
+
+# Rule baseline: property words and the value they stand for (0 = low end of the scale).
+RULE_WORDS = {
+    "hardness": {"very soft": 0.05, "soft": 0.2, "yielding": 0.1, "fluffy": 0.05, "porous": 0.1,
+                 "soft-skinned": 0.2, "firm": 0.6, "hard": 0.8, "rigid": 0.85, "very hard": 0.95},
+    "weight": {"extremely light": 0.0, "very light": 0.05, "light": 0.2, "small": 0.3,
+               "medium weight": 0.5, "heavy": 0.8, "massive": 0.9, "huge": 0.9, "very heavy": 0.95},
+    "roughness": {"very smooth": 0.0, "polished smooth": 0.0, "smooth": 0.1, "fuzzy": 0.35,
+                  "grippy": 0.35, "slightly rough": 0.35, "rough": 0.7, "uneven": 0.7, "bumpy": 0.75,
+                  "ridged": 0.8, "very rough": 0.9},
+}
+RULE_CONTACT = [
+    ["slash", "slashes", "cut", "cuts", "slice", "slices", "edge", "edges"],
+    ["stab", "stabs", "thrust", "thrusts", "pierce", "pierces", "point", "points", "poke", "pokes"],
+    ["smash", "smashes", "bash", "bashes", "crush", "crushes", "crash", "crashes", "slams", "blunt"],
+    ["scrape", "scrapes", "skid", "skids", "drag", "drags", "rub", "rubs", "rasp", "rasps", "grinding"],
+    ["shatter", "shatters", "break", "breaks", "brittle", "fragile"],
+]
+
+
+def rule_ask(text, questions):
+    out = {}
+    for qid, q in questions.items():
+        base = qid.split("~")[0]
+        if q["type"] != "choice":
+            raise ValueError("the rule baseline answers choice questions only")
+        if base == "contact":
+            tokens = re.findall(r"[a-z-]+", text.lower())
+            counts = [sum(t in kind for t in tokens) + 0.1 for kind in RULE_CONTACT]
+        else:
+            words = RULE_WORDS[base]
+            hits = [words[k] for k in matches(text, words)]
+            v = sum(hits) / len(hits) if hits else 0.5
+            counts = [math.exp(-((i / 4 - v) ** 2) / (2 * 0.1**2)) for i in range(5)]
+        total = sum(counts)
+        p = [c / total for c in counts]
+        out[qid] = list(reversed(p)) if qid.endswith("~rev") else p
+    return out
 
 
 def evaluate(get, validation):
@@ -237,11 +302,11 @@ def markdown(title, report):
     return "\n".join(lines)
 
 
-def run(ask, vocab, validation, qmode, smode, rubric=None):
+def run(ask, vocab, validation, qmode, smode, rubric=None, facts=None):
     """`ask(text, questions)` returns {qid: [probabilities in option order]}."""
     questions = build_questions(vocab, validation, qmode, rubric)
     report, cache = evaluate(
-        lambda s: shape(ask(state_text(s, validation, smode), questions), qmode), validation
+        lambda s: shape(ask(state_text(s, validation, smode, facts), questions), qmode), validation
     )
     judge(report, chance(questions, qmode, validation))
     return report, cache
@@ -253,9 +318,28 @@ def main():
     parser.add_argument("--questions", choices=["choice", "noul"], default="choice")
     parser.add_argument("--state", choices=["full", "desc", "fields"], default="full")
     parser.add_argument("--criteria", choices=["plain", "rubric"], default="plain")
+    parser.add_argument("--facts", choices=["none", "dict"], default="none")
     parser.add_argument("--cache", default=".laya-cache")
     parser.add_argument("--out", default="d5-report.json")
     args = parser.parse_args()
+    vocab = json.loads((HERE / "vocabulary.json").read_text(encoding="utf-8"))
+    validation = json.loads((HERE / "validation.json").read_text(encoding="utf-8"))
+    rubric = None
+    if args.criteria == "rubric":
+        rubric = json.loads((HERE / "rubric.json").read_text(encoding="utf-8"))
+    facts = None
+    if args.facts == "dict":
+        facts = json.loads((HERE / "facts.json").read_text(encoding="utf-8"))["facts"]
+    title = f"{args.model} · {args.questions} · {args.state} · {args.criteria} · facts {args.facts}"
+
+    def finish(report, cache):
+        out = {"title": title, "report": report, "answers": cache}
+        Path(args.out).write_text(json.dumps(out, indent=2), encoding="utf-8")
+        print(markdown(title, report))
+
+    if args.model == "rule":
+        finish(*run(rule_ask, vocab, validation, args.questions, args.state, rubric, facts))
+        return
 
     from huggingface_hub import snapshot_download
     import laya_coreml as laya
@@ -284,16 +368,8 @@ def main():
                 print(f"> ⚠️ {qid}: option tokens {sizes} hit Laya's limits (48 each, 176 total)")
                 print()
 
-    vocab = json.loads((HERE / "vocabulary.json").read_text(encoding="utf-8"))
-    validation = json.loads((HERE / "validation.json").read_text(encoding="utf-8"))
-    rubric = None
-    if args.criteria == "rubric":
-        rubric = json.loads((HERE / "rubric.json").read_text(encoding="utf-8"))
     budget(build_questions(vocab, validation, args.questions, rubric))
-    report, cache = run(ask, vocab, validation, args.questions, args.state, rubric)
-    title = f"{args.model} · {args.questions} · {args.state} · {args.criteria}"
-    Path(args.out).write_text(json.dumps({"title": title, "report": report, "answers": cache}, indent=2))
-    print(markdown(title, report))
+    finish(*run(ask, vocab, validation, args.questions, args.state, rubric, facts))
 
 
 if __name__ == "__main__":
