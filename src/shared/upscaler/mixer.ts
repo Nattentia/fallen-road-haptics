@@ -112,6 +112,12 @@ export class Mixer {
     this.active.push({ voice, importance, score });
   }
 
+  /** Every voice with a score still sounding after `now`. */
+  voices(now: number): string[] {
+    this.prune(now);
+    return [...new Set(this.active.map((a) => a.voice))];
+  }
+
   /** The voice's scores are cut from `now` (revise or release elsewhere). */
   forget(voice: string): void {
     this.active = this.active.filter((a) => a.voice !== voice);

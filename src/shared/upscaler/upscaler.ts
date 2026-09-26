@@ -14,6 +14,7 @@ import type {
   SoundFeatures,
   UpscalerEngine,
   UpscalerInput,
+  UpscalerLoad,
   UpscalerStep,
 } from './contract';
 import { Gauges, type GaugeMoment } from './gauges';
@@ -82,6 +83,7 @@ export class HapticUpscaler implements UpscalerEngine {
   private readonly textures = new Map<string, Texture>();
   /** Expected moments by voice, kept for stage 6 (prepared decisions). */
   readonly expected = new Map<string, { at: number; importance: number }>();
+  private load: UpscalerLoad = 'full';
   /** Rests due before announced moments, by action voice (6-2). */
   private readonly rests = new Map<string, { at: number; importance: number }>();
   private readonly sounds = new Map<string, SoundFeatures>();
@@ -101,7 +103,24 @@ export class HapticUpscaler implements UpscalerEngine {
     return id === undefined ? undefined : this.sounds.get(id);
   }
 
+  setLoad(load: UpscalerLoad, now: number): UpscalerStep {
+    if (load === this.load) return { baseGain: 1, commands: [] };
+    this.load = load;
+    const commands: Command[] = [];
+    if (load === 'off') commands.push(...this.silenceAll(now));
+    else if (load === 'light')
+      for (const key of [...this.textures.keys()])
+        commands.push(...this.stopTexture(key, now, TIMING.streamFadeMs));
+    return this.withWake({ baseGain: 1, commands });
+  }
+
   consume(signal: Signal, input: UpscalerInput): UpscalerStep {
+    if (this.load === 'off') {
+      // Gauges keep their state so the layer resumes where the game is;
+      // nothing is played.
+      if (signal.kind === 'gauge') this.gauges.report(signal, input.now);
+      return { baseGain: 1, commands: [] };
+    }
     this.prune(input.now);
     let step: UpscalerStep;
     switch (signal.kind) {
@@ -122,6 +141,7 @@ export class HapticUpscaler implements UpscalerEngine {
   }
 
   hint(hint: Hint, now: number): UpscalerStep {
+    if (this.load === 'off') return { baseGain: 1, commands: [] };
     const list = this.hints.get(hint.voice) ?? [];
     list.push(hint);
     this.hints.set(hint.voice, list);
@@ -151,6 +171,10 @@ export class HapticUpscaler implements UpscalerEngine {
   }
 
   wake(now: number): UpscalerStep {
+    if (this.load === 'off') {
+      this.gauges.due(now);
+      return { baseGain: 1, commands: [] };
+    }
     const commands: Command[] = [];
     for (const m of this.gauges.due(now)) commands.push(...this.gaugeMoment(m));
     for (const t of this.textures.values())
@@ -254,7 +278,10 @@ export class HapticUpscaler implements UpscalerEngine {
       material,
       this.soundOf(signal.sound)
     );
-    const deco = this.gauges.decoration(signal.gauges);
+    const light = this.load === 'light';
+    const deco = light
+      ? { instability: 0, advantage: 0 }
+      : this.gauges.decoration(signal.gauges);
     const input: PhraseInput = {
       outcome: signal.outcome,
       valence: signal.valence,
@@ -262,7 +289,8 @@ export class HapticUpscaler implements UpscalerEngine {
       target: signal.target,
       magnitude: signal.magnitude,
       importance: signal.importance,
-      texture,
+      // Under heat the texture keeps its shape but scatters no debris.
+      texture: light ? { ...texture, grain: 0 } : texture,
       decoration: {
         ...deco,
         random: seeded(
@@ -338,7 +366,7 @@ export class HapticUpscaler implements UpscalerEngine {
           ];
 
     const texture = this.textures.get(key);
-    if (levels.grainRateHz > 0) {
+    if (levels.grainRateHz > 0 && this.load === 'full') {
       if (texture) {
         texture.rateHz = levels.grainRateHz;
         texture.intensity = levels.grainIntensity;
@@ -497,11 +525,32 @@ export class HapticUpscaler implements UpscalerEngine {
     if (importance < ANTICIPATION.minImportance || at <= now) return [];
     const restAt = Math.max(now, at - ANTICIPATION.restMs);
     this.rests.set(voice, { at: restAt, importance });
+    if (this.load === 'light') return [];
     const shape = tension(restAt - now, importance);
     if (shape.events.length === 0) return [];
     const score = this.toScore(shape, voice, now, { kind: 'rule' });
     this.mixer.track(voice, importance, score);
     return this.play(voice, [score]);
+  }
+
+  /** Turning off: every voice goes quiet and the layer forgets its state. */
+  private silenceAll(now: number): Command[] {
+    const fade = TIMING.cancelFadeMs;
+    const out: Command[] = [];
+    for (const key of [...this.textures.keys()])
+      out.push(...this.stopTexture(key, now, fade));
+    const voices = new Set([...this.chains.keys(), ...this.mixer.voices(now)]);
+    for (const voice of voices) {
+      out.push(...this.closeStreams(voice, now, fade));
+      out.push({ op: 'release', voice, at: now, fadeMs: fade });
+      this.mixer.forget(voice);
+    }
+    this.chains.clear();
+    this.recent.clear();
+    this.hints.clear();
+    this.expected.clear();
+    this.rests.clear();
+    return out;
   }
 
   private forgetExpected(voice: string): void {

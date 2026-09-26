@@ -55,6 +55,10 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         backend.log = { NSLog("haptics: %@", $0) }
         upscaler.log = { NSLog("upscaler: %@", $0) }
         backend.onReset = { [weak self] in self?.upscaler.reset() }
+        // Heat sheds the upscale layer's decoration, then the layer (6-3).
+        thermalObserver = NotificationCenter.default.addObserver(
+            forName: ProcessInfo.thermalStateDidChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in self?.sendThermalState() }
 
         setUpOverlay()
         statsTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
@@ -64,6 +68,18 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
     }
 
     // MARK: - Bridge
+
+    private var thermalObserver: NSObjectProtocol?
+
+    deinit {
+        if let thermalObserver { NotificationCenter.default.removeObserver(thermalObserver) }
+    }
+
+    private func sendThermalState() {
+        let name = ThermalLoad.name(ProcessInfo.processInfo.thermalState)
+        NSLog("upscaler: thermal %@", name)
+        webView.evaluateJavaScript("window.__hsLoad&&window.__hsLoad('\(name)')")
+    }
 
     func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
         let received = Clock.nowMs()
@@ -75,6 +91,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
             // A page (re)loaded: whatever the previous page held has no owner.
             upscaler.releaseAll()
             log.resetSync()
+            sendThermalState()
         case "ping":
             let sentAt = (body["t"] as? NSNumber)?.doubleValue ?? 0
             webView.evaluateJavaScript("window.__hsPong&&window.__hsPong(\(sentAt),\(received))")

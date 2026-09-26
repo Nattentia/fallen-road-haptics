@@ -7,12 +7,23 @@ import {
   type Hint,
   type SoundFeatures,
   type UpscalerEngine,
+  type UpscalerLoad,
   type UpscalerStep,
   validateCommand,
 } from './contract';
 
 /** What a failed step falls back to: the base alone, never nothing. */
 const BASE_ONLY: UpscalerStep = { baseGain: 1, commands: [] };
+
+/**
+ * An engine that fails this many times in a row is set aside (base only)
+ * for the cooldown, then tried again (plan unit 6-3).
+ */
+export const LINK_BREAKER = { failures: 3, cooldownMs: 5000 };
+
+/** The device's thermal state (ProcessInfo.ThermalState) as a load. */
+export const loadForThermal = (state: string): UpscalerLoad =>
+  state === 'critical' ? 'off' : state === 'serious' ? 'light' : 'full';
 
 /**
  * Sits between the game and the native player. It hands each signal to the
@@ -28,6 +39,8 @@ export class UpscalerLink {
   private flushQueued = false;
   private wakeTimer: ReturnType<typeof setTimeout> | null = null;
   private wakeAt = Infinity;
+  private failures = 0;
+  private trippedAt: number | null = null;
 
   constructor(
     private readonly engine: UpscalerEngine,
@@ -42,12 +55,37 @@ export class UpscalerLink {
    * paired base vibration still plays (fallback: base only).
    */
   private guarded(call: () => UpscalerStep): UpscalerStep {
+    const now = this.now();
+    if (
+      this.trippedAt !== null &&
+      now - this.trippedAt < LINK_BREAKER.cooldownMs
+    )
+      return BASE_ONLY;
     try {
-      return call();
+      const step = call();
+      this.failures = 0;
+      this.trippedAt = null;
+      return step;
     } catch (error) {
       this.report(`engine failed: ${String(error)}`);
+      this.failures += 1;
+      if (this.failures >= LINK_BREAKER.failures) {
+        this.trippedAt = now;
+        this.report(
+          `engine failed ${this.failures} times: base only for ${LINK_BREAKER.cooldownMs} ms`
+        );
+      }
       return BASE_ONLY;
     }
+  }
+
+  /** Sheds or restores work, e.g. when the device heats up. */
+  load(load: UpscalerLoad): void {
+    this.report(`load ${load}`);
+    this.deliver(
+      this.guarded(() => this.engine.setLoad(load, this.now())),
+      null
+    );
   }
 
   define(bases: readonly BaseVibration[]): void {

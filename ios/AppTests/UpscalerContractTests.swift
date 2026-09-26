@@ -70,4 +70,11 @@ final class UpscalerContractTests: XCTestCase {
         XCTAssertEqual(score.intensityControl(atMs: -5), 1)
         XCTAssertEqual(score.intensityControl(atMs: 500), 1)
     }
+
+    func testNamesThermalStatesForTheJsSide() {
+        XCTAssertEqual(ThermalLoad.name(.nominal), "nominal")
+        XCTAssertEqual(ThermalLoad.name(.fair), "fair")
+        XCTAssertEqual(ThermalLoad.name(.serious), "serious")
+        XCTAssertEqual(ThermalLoad.name(.critical), "critical")
+    }
 }

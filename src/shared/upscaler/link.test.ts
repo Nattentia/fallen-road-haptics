@@ -54,6 +54,7 @@ const fakeEngine = () => {
       wakes.push(now);
       return step([{ op: 'release', voice: 'woken', at: now, fadeMs: 0 }]);
     },
+    setLoad: () => step([]),
   };
   return {
     engine,
@@ -228,6 +229,7 @@ describe('UpscalerLink', () => {
         throw new Error('boom');
       },
       wake: () => ({ baseGain: 1, commands: [] }),
+      setLoad: () => ({ baseGain: 1, commands: [] }),
     };
     const link = new UpscalerLink(
       broken,
@@ -266,6 +268,7 @@ describe('UpscalerLink', () => {
       }),
       hint: () => ({ baseGain: 1, commands: [] }),
       wake: () => ({ baseGain: 1, commands: [] }),
+      setLoad: () => ({ baseGain: 1, commands: [] }),
     };
     const link = new UpscalerLink(
       engine,

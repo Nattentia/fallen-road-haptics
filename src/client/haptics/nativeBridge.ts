@@ -15,7 +15,7 @@ import {
 import { SIGNAL_EVENT } from './signalBus';
 import type { Signal } from '../../shared/haptics/signals';
 import type { Command, Hint } from '../../shared/upscaler/contract';
-import { UpscalerLink } from '../../shared/upscaler/link';
+import { loadForThermal, UpscalerLink } from '../../shared/upscaler/link';
 import { HapticUpscaler } from '../../shared/upscaler/upscaler';
 
 /**
@@ -30,6 +30,8 @@ type NativeWindow = Window & {
   webkit?: { messageHandlers?: { hs?: NativeHandler } };
   __hsPong?: (sentAt: number, swiftMs: number) => void;
   __hsHint?: (hint: Hint) => void;
+  /** The app reports the device's thermal state (6-3). */
+  __hsLoad?: (thermalState: string) => void;
 };
 
 const SYNC_INTERVAL_MS = 2000;
@@ -90,6 +92,8 @@ export const installNativeBridge = (game: Game): boolean => {
   const link = new UpscalerLink(new HapticUpscaler(), sendCommands);
   link.define(BASE_VIBRATIONS);
   (window as NativeWindow).__hsHint = (hint) => link.hint(hint);
+  (window as NativeWindow).__hsLoad = (state) =>
+    link.load(loadForThermal(state));
   game.events.on(BASE_HAPTIC_EVENT, (e: BaseHapticEvent) =>
     link.base(e.action)
   );

@@ -164,3 +164,18 @@ extension UpscalerCommand: Decodable {
         return try JSONDecoder().decode(UpscalerCommand.self, from: data)
     }
 }
+
+/// The device's thermal state as the JS side names it; `loadForThermal`
+/// (src/shared/upscaler/link.ts) turns it into the upscaler's load:
+/// serious sheds decoration, critical leaves the base alone (plan unit 6-3).
+enum ThermalLoad {
+    static func name(_ state: ProcessInfo.ThermalState) -> String {
+        switch state {
+        case .nominal: return "nominal"
+        case .fair: return "fair"
+        case .serious: return "serious"
+        case .critical: return "critical"
+        @unknown default: return "nominal"
+        }
+    }
+}

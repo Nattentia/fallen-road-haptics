@@ -196,6 +196,12 @@ export type UpscalerStep = {
   wakeAt?: number;
 };
 
+/**
+ * How much the upscaler may do (plan unit 6-3): everything; `light` sheds
+ * decoration (heat), keeping skeleton and size; `off` leaves the base alone.
+ */
+export type UpscalerLoad = 'full' | 'light' | 'off';
+
 export type UpscalerEngine = {
   define(bases: readonly BaseVibration[]): Command[];
   /** Features of the game's sound effects, by the id signals name. */
@@ -203,6 +209,8 @@ export type UpscalerEngine = {
   consume(signal: Signal, input: UpscalerInput): UpscalerStep;
   hint(hint: Hint, now: number): UpscalerStep;
   wake(now: number): UpscalerStep;
+  /** Changes the load; returns what it takes (releases when turning off). */
+  setLoad(load: UpscalerLoad, now: number): UpscalerStep;
 };
 
 // ---------------------------------------------------------------------------
