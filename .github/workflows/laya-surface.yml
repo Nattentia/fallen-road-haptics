@@ -38,6 +38,7 @@ jobs:
           python tools/laya/surface.py --model "$MODEL" --criteria ${{ matrix.criteria }} | tee summary.md
           cat summary.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: surface-${{ matrix.criteria }}
           path: surface-report.json

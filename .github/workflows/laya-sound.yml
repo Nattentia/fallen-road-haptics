@@ -36,6 +36,7 @@ jobs:
           python tools/laya/sound_eval.py --model "$MODEL" | tee summary.md
           cat summary.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: sound
           path: sound-report.json

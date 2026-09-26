@@ -128,8 +128,11 @@ def chance(n, k, runs=2000, seed=9):
 
 def order_chance(truths, gap, runs=500, seed=9):
     rng = random.Random(seed)
-    s = sorted(order_score([rng.random() for _ in truths], truths, gap) for _ in range(runs))
-    return s[int(0.95 * runs)]
+    scores = [order_score([rng.random() for _ in truths], truths, gap) for _ in range(runs)]
+    if None in scores:
+        return None
+    scores.sort()
+    return scores[int(0.95 * runs)]
 
 
 def main():
@@ -153,10 +156,13 @@ def main():
             qs[qid + "~rev"], keys[qid + "~rev"] = question(spec, reverse=True)
         answers = agent.predict(text, qs)["answers"]
         out = {}
-        for qid in specs:
-            fwd = list(answers[qid]["probabilities"].values())
-            rev = list(answers[qid + "~rev"]["probabilities"].values())[::-1]
-            pick = lambda p: keys[qid][max(range(len(p)), key=p.__getitem__)]
+        for qid, (_, options) in specs.items():
+            # Read each option's probability by its label, never by the
+            # order the library happens to return them in.
+            order = list(options)
+            fwd = [answers[qid]["probabilities"][options[k]] for k in order]
+            rev = [answers[qid + "~rev"]["probabilities"][options[k]] for k in order]
+            pick = lambda p: order[max(range(len(p)), key=p.__getitem__)]
             # Asking both ways and averaging cancels the option-order bias.
             both = [(a + b) / 2 for a, b in zip(fwd, rev)]
             out[qid] = {"p": fwd, "pick": pick(fwd), "flip": pick(fwd) != pick(rev),
@@ -213,11 +219,15 @@ def main():
         for it, a in zip(items, answers):
             rows.append({"set": qid, "text": it["text"], "level": it["level"], qid: a["pick"]})
 
+    # An order metric has no value when no two truths are far enough apart.
+    for name in [n for n, r in report.items() if r["laya"] is None or r["chance95"] is None]:
+        print(f"> {name}: no pair of truths far enough apart; skipped")
+        del report[name]
     for r in report.values():
         r["pass"] = r["laya"] > r["chance95"] and r["flip"] <= 0.15
         # Both-ways answers have no order bias by construction.
         r["pass both ways"] = r["both ways"] > r["chance95"]
-        r["beats rule"] = max(r["laya"], r["both ways"]) > r["rule"]
+        r["beats rule"] = max(r["laya"], r["both ways"]) > (r["rule"] or 0)
     Path(args.out).write_text(json.dumps({"model": args.model, "report": report, "rows": rows}, indent=2),
                               encoding="utf-8")
     print(f"### 4-2' in-text judgements: {args.model}\n")
@@ -225,7 +235,7 @@ def main():
     print("| question | n | Laya | both ways | rule | chance (95%) | flips | pass (one way) | pass (both ways) | beats rule |")
     print("|---|---|---|---|---|---|---|---|---|---|")
     for name, r in report.items():
-        print(f"| {name} | {r['n']} | {r['laya']:.2f} | {r['both ways']:.2f} | {r['rule']:.2f} | "
+        print(f"| {name} | {r['n']} | {r['laya']:.2f} | {r['both ways']:.2f} | {r['rule'] or 0:.2f} | "
               f"{r['chance95']:.2f} | {r['flip']:.2f} | {ok(r['pass'])} | {ok(r['pass both ways'])} | "
               f"{ok(r['beats rule'])} |")
 
