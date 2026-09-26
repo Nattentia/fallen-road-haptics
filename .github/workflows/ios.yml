@@ -58,6 +58,13 @@ jobs:
           device=$(xcrun simctl list devices available | grep -m1 -oE 'iPhone [^(]+' | sed 's/ *$//')
           echo "Simulator: $device"
           xcodebuild test -project FallenRoadHaptics.xcodeproj -scheme FallenRoadHapticsTests -destination "platform=iOS Simulator,name=$device" CODE_SIGNING_ALLOWED=NO | tail -n 80
+      - name: Compile the whole app for the simulator
+        run: |
+          # Every Swift file, not only the ones the tests include.
+          set -o pipefail
+          cd ios
+          device=$(xcrun simctl list devices available | grep -m1 -oE 'iPhone [^(]+' | sed 's/ *$//')
+          xcodebuild build -project FallenRoadHaptics.xcodeproj -scheme FallenRoadHaptics -destination "platform=iOS Simulator,name=$device" CODE_SIGNING_ALLOWED=NO | tail -n 40
 
   build:
     needs: [web, test]
@@ -104,13 +111,16 @@ jobs:
 
       - name: Build unsigned app
         run: |
+          # Without pipefail, `| tail` hides a failed build; the .app folder
+          # exists even then, so also require the executable itself.
+          set -o pipefail
           cd ios
           xcodebuild -project FallenRoadHaptics.xcodeproj -scheme FallenRoadHaptics \
             -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
             build | tail -n 60
-          test -d build/Build/Products/Release-iphoneos/FallenRoadHaptics.app
+          test -f build/Build/Products/Release-iphoneos/FallenRoadHaptics.app/FallenRoadHaptics
 
       - name: Package IPA
         run: |

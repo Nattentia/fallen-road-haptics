@@ -1,4 +1,5 @@
 import CoreHaptics
+import QuartzCore
 
 /// Core Haptics implementation of HapticBackend. One pre-started engine;
 /// every score and hold gets its own advanced player, so a curve in one score
