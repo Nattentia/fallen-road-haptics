@@ -83,7 +83,10 @@ describe.runIf(hasFfmpeg)('T3: the game sounds', () => {
     const total = rows.reduce((s, r) => s + r.ms, 0);
     expect(total).toBeLessThan(2000);
     for (const r of rows) expect(r.durationMs).toBeGreaterThan(0);
-  });
+    // The limit covers decoding every file with ffmpeg on first use, which
+    // alone can pass vitest's 5 s default on a busy laptop; analysis time is
+    // what the assertion above bounds.
+  }, 30_000);
 
   it('gives different sounds different features', () => {
     const rows = loadRows();
