@@ -1,0 +1,232 @@
+{
+  "about": "D5 validation for the live questions. No absolute answer key: checks are relative order, stable answers under paraphrase, loose anchors for everyday objects outside the game, and the expected contact kind where it is unambiguous. The demo game's weapons are paper, so absolute hardness of its items is left to relative checks.",
+  "context": [
+    "result: landed.",
+    "size: medium.",
+    "by: self.",
+    "to: other.",
+    "for player: good."
+  ],
+  "order": [
+    {
+      "question": "weight",
+      "higher": "player smashes enemy torso with paper hammer.",
+      "lower": "player stabs enemy torso with paper daggers."
+    },
+    {
+      "question": "weight",
+      "higher": "player bashes enemy torso with paper mace.",
+      "lower": "player slashes enemy torso with paper sword."
+    },
+    {
+      "question": "weight",
+      "higher": "player heavily smashes enemy head with paper hammer.",
+      "lower": "player stabs enemy head with paper daggers."
+    },
+    {
+      "question": "weight",
+      "higher": "a truck crashes into a wall.",
+      "lower": "a feather lands on a table."
+    },
+    {
+      "question": "weight",
+      "higher": "a boulder rolls onto the road.",
+      "lower": "a leaf falls onto the road."
+    },
+    {
+      "question": "hardness",
+      "higher": "a steel sword strikes an iron shield.",
+      "lower": "a fist hits a pillow."
+    },
+    {
+      "question": "hardness",
+      "higher": "player shield blocks enemy slash attack.",
+      "lower": "enemy slash attack hits player."
+    },
+    {
+      "question": "hardness",
+      "higher": "tyres roll over asphalt.",
+      "lower": "tyres roll over grass."
+    },
+    {
+      "question": "hardness",
+      "higher": "a glass bottle hits a stone floor.",
+      "lower": "a rubber ball hits a carpet."
+    },
+    {
+      "question": "hardness",
+      "higher": "a hammer hits an anvil.",
+      "lower": "a hammer hits wet clay."
+    },
+    {
+      "question": "roughness",
+      "higher": "tyres roll over gravel.",
+      "lower": "tyres roll over asphalt."
+    },
+    {
+      "question": "roughness",
+      "higher": "a blade scrapes along a stone wall.",
+      "lower": "a blade slices through silk."
+    },
+    {
+      "question": "roughness",
+      "higher": "a sled drags over rocks.",
+      "lower": "skis slide over fresh snow."
+    },
+    {
+      "question": "roughness",
+      "higher": "sandpaper rubs against wood.",
+      "lower": "a finger slides across glass."
+    },
+    {
+      "question": "weight",
+      "higher": "a bowling ball drops onto the floor.",
+      "lower": "a tennis ball drops onto the floor."
+    },
+    {
+      "question": "weight",
+      "higher": "an anvil falls onto a cart.",
+      "lower": "a paper cup falls onto a cart."
+    },
+    {
+      "question": "weight",
+      "higher": "player bashes enemy legs with paper mace.",
+      "lower": "player stabs enemy legs with paper daggers."
+    },
+    {
+      "question": "hardness",
+      "higher": "a spoon taps a ceramic plate.",
+      "lower": "a spoon taps a sponge."
+    },
+    {
+      "question": "hardness",
+      "higher": "boots stomp on frozen ground.",
+      "lower": "boots stomp on mud."
+    },
+    {
+      "question": "hardness",
+      "higher": "a nail is struck into oak.",
+      "lower": "a nail is pressed into butter."
+    },
+    {
+      "question": "roughness",
+      "higher": "a file rasps against metal.",
+      "lower": "a cloth wipes over metal."
+    },
+    {
+      "question": "roughness",
+      "higher": "a bike rides over cobblestones.",
+      "lower": "a bike rides on a smooth track."
+    },
+    {
+      "question": "roughness",
+      "higher": "a hand brushes tree bark.",
+      "lower": "a hand brushes silk."
+    },
+    {
+      "question": "roughness",
+      "higher": "a brick scrapes across concrete.",
+      "lower": "an ice cube slides on marble."
+    }
+  ],
+  "contact": [
+    {
+      "state": "player slashes enemy torso with paper sword.",
+      "expect": 0
+    },
+    {
+      "state": "player stabs enemy torso with paper daggers.",
+      "expect": 1
+    },
+    {
+      "state": "player thrusts at enemy torso with paper spear.",
+      "expect": 1
+    },
+    {
+      "state": "enemy thrust attack hits player.",
+      "expect": 1
+    },
+    {
+      "state": "player smashes enemy torso with paper hammer.",
+      "expect": 2
+    },
+    {
+      "state": "player bashes enemy head with paper mace.",
+      "expect": 2
+    },
+    {
+      "state": "a blade scrapes along a stone wall.",
+      "expect": 3
+    },
+    {
+      "state": "tyres skid across gravel.",
+      "expect": 3
+    },
+    {
+      "state": "a glass bottle shatters on the floor.",
+      "expect": 4
+    },
+    {
+      "state": "player shield breaks.",
+      "expect": 4
+    }
+  ],
+  "paraphrase": [
+    [
+      "player smashes enemy torso with paper hammer.",
+      "the player hits the enemy's body hard with a paper hammer."
+    ],
+    [
+      "player stabs enemy torso with paper daggers.",
+      "the player pokes the enemy's chest with small paper knives."
+    ],
+    [
+      "player slashes enemy torso with paper sword.",
+      "the player cuts across the enemy's body with a paper sword."
+    ],
+    [
+      "tyres roll over gravel.",
+      "the car drives along a gravel road."
+    ],
+    [
+      "a glass bottle shatters on the floor.",
+      "a glass bottle falls and breaks on the ground."
+    ],
+    [
+      "a truck crashes into a wall.",
+      "a large lorry slams into a brick wall."
+    ]
+  ],
+  "anchors": [
+    {
+      "question": "weight",
+      "state": "a truck crashes into a wall.",
+      "min": 0.6
+    },
+    {
+      "question": "weight",
+      "state": "a feather lands on a table.",
+      "max": 0.4
+    },
+    {
+      "question": "hardness",
+      "state": "a steel sword strikes an iron shield.",
+      "min": 0.6
+    },
+    {
+      "question": "hardness",
+      "state": "a fist hits a pillow.",
+      "max": 0.4
+    },
+    {
+      "question": "roughness",
+      "state": "tyres roll over gravel.",
+      "min": 0.5
+    },
+    {
+      "question": "roughness",
+      "state": "skis slide over fresh snow.",
+      "max": 0.5
+    }
+  ]
+}
