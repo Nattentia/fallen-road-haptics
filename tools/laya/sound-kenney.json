@@ -1,0 +1,1042 @@
+{
+  "footstep_carpet_000.ogg": {
+    "durationMs": 140,
+    "decayMs": 40,
+    "brightness": 0.455,
+    "brightnessStart": 0.6554032356836995,
+    "noisiness": 0.033,
+    "peakDb": 1.9
+  },
+  "footstep_carpet_001.ogg": {
+    "durationMs": 140,
+    "decayMs": 40,
+    "brightness": 0.576,
+    "brightnessStart": 0.7720093922305616,
+    "noisiness": 0.054,
+    "peakDb": 1.9
+  },
+  "footstep_carpet_002.ogg": {
+    "durationMs": 140,
+    "decayMs": 40,
+    "brightness": 0.576,
+    "brightnessStart": 0.7720093922305616,
+    "noisiness": 0.054,
+    "peakDb": 1.9
+  },
+  "footstep_carpet_003.ogg": {
+    "durationMs": 140,
+    "decayMs": 40,
+    "brightness": 0.513,
+    "brightnessStart": 0.5575933560529398,
+    "noisiness": 0.025,
+    "peakDb": 1.9
+  },
+  "footstep_carpet_004.ogg": {
+    "durationMs": 140,
+    "decayMs": 40,
+    "brightness": 0.513,
+    "brightnessStart": 0.5575933560529398,
+    "noisiness": 0.025,
+    "peakDb": 1.9
+  },
+  "footstep_concrete_000.ogg": {
+    "durationMs": 110,
+    "decayMs": 10,
+    "brightness": 0.434,
+    "brightnessStart": 0.3372216739842565,
+    "noisiness": 0.007,
+    "peakDb": 2.1
+  },
+  "footstep_concrete_001.ogg": {
+    "durationMs": 110,
+    "decayMs": 10,
+    "brightness": 0.6,
+    "brightnessStart": 0.635845306709413,
+    "noisiness": 0.026,
+    "peakDb": 1.8
+  },
+  "footstep_concrete_002.ogg": {
+    "durationMs": 110,
+    "decayMs": 10,
+    "brightness": 0.582,
+    "brightnessStart": 0.6179340574525798,
+    "noisiness": 0.026,
+    "peakDb": 2
+  },
+  "footstep_concrete_003.ogg": {
+    "durationMs": 110,
+    "decayMs": 10,
+    "brightness": 0.464,
+    "brightnessStart": 0.4180567552617499,
+    "noisiness": 0.012,
+    "peakDb": 1.9
+  },
+  "footstep_concrete_004.ogg": {
+    "durationMs": 120,
+    "decayMs": 10,
+    "brightness": 0.441,
+    "brightnessStart": 0.33869569314602654,
+    "noisiness": 0.01,
+    "peakDb": 2
+  },
+  "footstep_grass_000.ogg": {
+    "durationMs": 150,
+    "decayMs": 10,
+    "brightness": 0.777,
+    "brightnessStart": 0.677497007309381,
+    "noisiness": 0.049,
+    "peakDb": 2
+  },
+  "footstep_grass_001.ogg": {
+    "durationMs": 650,
+    "decayMs": 60,
+    "brightness": 0.23,
+    "brightnessStart": 0.7617852793065043,
+    "noisiness": 0.092,
+    "peakDb": 1.8
+  },
+  "footstep_grass_002.ogg": {
+    "durationMs": 150,
+    "decayMs": 30,
+    "brightness": 0.806,
+    "brightnessStart": 0.7507325550848118,
+    "noisiness": 0.091,
+    "peakDb": 2
+  },
+  "footstep_grass_003.ogg": {
+    "durationMs": 170,
+    "decayMs": 10,
+    "brightness": 0.727,
+    "brightnessStart": 0.6902455469871769,
+    "noisiness": 0.047,
+    "peakDb": 2.1
+  },
+  "footstep_grass_004.ogg": {
+    "durationMs": 570,
+    "decayMs": 50,
+    "brightness": 0.197,
+    "brightnessStart": 0.6898512514016427,
+    "noisiness": 0.049,
+    "peakDb": 1.9
+  },
+  "footstep_snow_000.ogg": {
+    "durationMs": 170,
+    "decayMs": 120,
+    "brightness": 0.739,
+    "brightnessStart": 0.6317588013965045,
+    "noisiness": 0.038,
+    "peakDb": 2.1
+  },
+  "footstep_snow_001.ogg": {
+    "durationMs": 170,
+    "decayMs": 70,
+    "brightness": 0.606,
+    "brightnessStart": 0.5902613428461353,
+    "noisiness": 0.016,
+    "peakDb": 2
+  },
+  "footstep_snow_002.ogg": {
+    "durationMs": 180,
+    "decayMs": 110,
+    "brightness": 0.596,
+    "brightnessStart": 0.5761950727861467,
+    "noisiness": 0.012,
+    "peakDb": 2
+  },
+  "footstep_snow_003.ogg": {
+    "durationMs": 360,
+    "decayMs": 160,
+    "brightness": 0.378,
+    "brightnessStart": 0.669810241288399,
+    "noisiness": 0.018,
+    "peakDb": 2.1
+  },
+  "footstep_snow_004.ogg": {
+    "durationMs": 180,
+    "decayMs": 110,
+    "brightness": 0.626,
+    "brightnessStart": 0.6913934429087133,
+    "noisiness": 0.02,
+    "peakDb": 2
+  },
+  "footstep_wood_000.ogg": {
+    "durationMs": 250,
+    "decayMs": 20,
+    "brightness": 0,
+    "brightnessStart": 0,
+    "noisiness": 0,
+    "peakDb": 2.1
+  },
+  "footstep_wood_001.ogg": {
+    "durationMs": 250,
+    "decayMs": 20,
+    "brightness": 0.065,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "footstep_wood_002.ogg": {
+    "durationMs": 250,
+    "decayMs": 20,
+    "brightness": 0.066,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "footstep_wood_003.ogg": {
+    "durationMs": 250,
+    "decayMs": 20,
+    "brightness": 0.1,
+    "brightnessStart": 0.08286287101021675,
+    "noisiness": 0.002,
+    "peakDb": 1.9
+  },
+  "footstep_wood_004.ogg": {
+    "durationMs": 250,
+    "decayMs": 20,
+    "brightness": 0.067,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "impactBell_heavy_000.ogg": {
+    "durationMs": 1130,
+    "decayMs": 310,
+    "brightness": 0.287,
+    "brightnessStart": 0.33558289292503457,
+    "noisiness": 0,
+    "peakDb": 1.9
+  },
+  "impactBell_heavy_001.ogg": {
+    "durationMs": 1300,
+    "decayMs": 230,
+    "brightness": 0.264,
+    "brightnessStart": 0.31948254509691476,
+    "noisiness": 0,
+    "peakDb": 1.8
+  },
+  "impactBell_heavy_002.ogg": {
+    "durationMs": 500,
+    "decayMs": 90,
+    "brightness": 0.207,
+    "brightnessStart": 0.26685697398468117,
+    "noisiness": 0,
+    "peakDb": 2.2
+  },
+  "impactBell_heavy_003.ogg": {
+    "durationMs": 480,
+    "decayMs": 90,
+    "brightness": 0.319,
+    "brightnessStart": 0.3865543052534964,
+    "noisiness": 0,
+    "peakDb": 2
+  },
+  "impactBell_heavy_004.ogg": {
+    "durationMs": 290,
+    "decayMs": 30,
+    "brightness": 0.096,
+    "brightnessStart": 0.1885360823625155,
+    "noisiness": 0.001,
+    "peakDb": 1.9
+  },
+  "impactGeneric_light_000.ogg": {
+    "durationMs": 140,
+    "decayMs": 20,
+    "brightness": 0.25,
+    "brightnessStart": 0.44907110337670025,
+    "noisiness": 0.001,
+    "peakDb": 1.8
+  },
+  "impactGeneric_light_001.ogg": {
+    "durationMs": 120,
+    "decayMs": 20,
+    "brightness": 0.351,
+    "brightnessStart": 0.49587369782340296,
+    "noisiness": 0.005,
+    "peakDb": 2
+  },
+  "impactGeneric_light_002.ogg": {
+    "durationMs": 150,
+    "decayMs": 30,
+    "brightness": 0.215,
+    "brightnessStart": 0.44949403083702083,
+    "noisiness": 0,
+    "peakDb": 2
+  },
+  "impactGeneric_light_003.ogg": {
+    "durationMs": 140,
+    "decayMs": 20,
+    "brightness": 0.369,
+    "brightnessStart": 0.5131293622488394,
+    "noisiness": 0.004,
+    "peakDb": 1.9
+  },
+  "impactGeneric_light_004.ogg": {
+    "durationMs": 140,
+    "decayMs": 20,
+    "brightness": 0.378,
+    "brightnessStart": 0.5060823573357406,
+    "noisiness": 0.004,
+    "peakDb": 2.1
+  },
+  "impactGlass_heavy_000.ogg": {
+    "durationMs": 240,
+    "decayMs": 40,
+    "brightness": 0.501,
+    "brightnessStart": 0.4834814682525834,
+    "noisiness": 0.001,
+    "peakDb": 1.9
+  },
+  "impactGlass_heavy_001.ogg": {
+    "durationMs": 430,
+    "decayMs": 40,
+    "brightness": 0.361,
+    "brightnessStart": 0.49712922890540046,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "impactGlass_heavy_002.ogg": {
+    "durationMs": 250,
+    "decayMs": 20,
+    "brightness": 0.521,
+    "brightnessStart": 0.5184404769594513,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "impactGlass_heavy_003.ogg": {
+    "durationMs": 170,
+    "decayMs": 30,
+    "brightness": 0.551,
+    "brightnessStart": 0.4776155403004519,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "impactGlass_heavy_004.ogg": {
+    "durationMs": 400,
+    "decayMs": 40,
+    "brightness": 0.288,
+    "brightnessStart": 0.4043894037196015,
+    "noisiness": 0.001,
+    "peakDb": 1.8
+  },
+  "impactGlass_light_000.ogg": {
+    "durationMs": 120,
+    "decayMs": 40,
+    "brightness": 0.559,
+    "brightnessStart": 0.5868678945517711,
+    "noisiness": 0,
+    "peakDb": 1.4
+  },
+  "impactGlass_light_001.ogg": {
+    "durationMs": 130,
+    "decayMs": 40,
+    "brightness": 0.597,
+    "brightnessStart": 0.6058327491839035,
+    "noisiness": 0,
+    "peakDb": 2.1
+  },
+  "impactGlass_light_002.ogg": {
+    "durationMs": 140,
+    "decayMs": 40,
+    "brightness": 0.576,
+    "brightnessStart": 0.6895799875763522,
+    "noisiness": 0.002,
+    "peakDb": 1.8
+  },
+  "impactGlass_light_003.ogg": {
+    "durationMs": 140,
+    "decayMs": 40,
+    "brightness": 0.554,
+    "brightnessStart": 0.6047887951633454,
+    "noisiness": 0,
+    "peakDb": 1.9
+  },
+  "impactGlass_light_004.ogg": {
+    "durationMs": 120,
+    "decayMs": 40,
+    "brightness": 0.527,
+    "brightnessStart": 0.5854339511007818,
+    "noisiness": 0,
+    "peakDb": 2.2
+  },
+  "impactGlass_medium_000.ogg": {
+    "durationMs": 540,
+    "decayMs": 50,
+    "brightness": 0.387,
+    "brightnessStart": 0.5283749623985516,
+    "noisiness": 0.001,
+    "peakDb": 1.8
+  },
+  "impactGlass_medium_001.ogg": {
+    "durationMs": 540,
+    "decayMs": 50,
+    "brightness": 0.433,
+    "brightnessStart": 0.5940812485639707,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "impactGlass_medium_002.ogg": {
+    "durationMs": 540,
+    "decayMs": 50,
+    "brightness": 0.379,
+    "brightnessStart": 0.5047724333526686,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "impactGlass_medium_003.ogg": {
+    "durationMs": 530,
+    "decayMs": 50,
+    "brightness": 0.425,
+    "brightnessStart": 0.5926968374780296,
+    "noisiness": 0.001,
+    "peakDb": 1.8
+  },
+  "impactGlass_medium_004.ogg": {
+    "durationMs": 350,
+    "decayMs": 60,
+    "brightness": 0.407,
+    "brightnessStart": 0.48119970177550453,
+    "noisiness": 0,
+    "peakDb": 1.6
+  },
+  "impactMetal_heavy_000.ogg": {
+    "durationMs": 170,
+    "decayMs": 10,
+    "brightness": 0.442,
+    "brightnessStart": 0.664674836735496,
+    "noisiness": 0.005,
+    "peakDb": 2.1
+  },
+  "impactMetal_heavy_001.ogg": {
+    "durationMs": 360,
+    "decayMs": 30,
+    "brightness": 0.435,
+    "brightnessStart": 0.6244569374043041,
+    "noisiness": 0.002,
+    "peakDb": 1.9
+  },
+  "impactMetal_heavy_002.ogg": {
+    "durationMs": 120,
+    "decayMs": 10,
+    "brightness": 0.405,
+    "brightnessStart": 0.6717740359925553,
+    "noisiness": 0.007,
+    "peakDb": 1.8
+  },
+  "impactMetal_heavy_003.ogg": {
+    "durationMs": 210,
+    "decayMs": 20,
+    "brightness": 0.369,
+    "brightnessStart": 0.6466502720917711,
+    "noisiness": 0.003,
+    "peakDb": 2
+  },
+  "impactMetal_heavy_004.ogg": {
+    "durationMs": 140,
+    "decayMs": 10,
+    "brightness": 0.426,
+    "brightnessStart": 0.5971734495103201,
+    "noisiness": 0.01,
+    "peakDb": 1.7
+  },
+  "impactMetal_light_000.ogg": {
+    "durationMs": 190,
+    "decayMs": 70,
+    "brightness": 0.71,
+    "brightnessStart": 0.7480694220304158,
+    "noisiness": 0,
+    "peakDb": 2
+  },
+  "impactMetal_light_001.ogg": {
+    "durationMs": 160,
+    "decayMs": 40,
+    "brightness": 0.667,
+    "brightnessStart": 0.7278785049934625,
+    "noisiness": 0,
+    "peakDb": 2.1
+  },
+  "impactMetal_light_002.ogg": {
+    "durationMs": 140,
+    "decayMs": 40,
+    "brightness": 0.735,
+    "brightnessStart": 0.767458408436998,
+    "noisiness": 0,
+    "peakDb": 1.6
+  },
+  "impactMetal_light_003.ogg": {
+    "durationMs": 260,
+    "decayMs": 90,
+    "brightness": 0.745,
+    "brightnessStart": 0.8217094799063108,
+    "noisiness": 0,
+    "peakDb": 1.5
+  },
+  "impactMetal_light_004.ogg": {
+    "durationMs": 190,
+    "decayMs": 50,
+    "brightness": 0.625,
+    "brightnessStart": 0.6975975371409864,
+    "noisiness": 0,
+    "peakDb": 1.7
+  },
+  "impactMetal_medium_000.ogg": {
+    "durationMs": 260,
+    "decayMs": 50,
+    "brightness": 0.48,
+    "brightnessStart": 0.6751084275057864,
+    "noisiness": 0.001,
+    "peakDb": 1.9
+  },
+  "impactMetal_medium_001.ogg": {
+    "durationMs": 140,
+    "decayMs": 40,
+    "brightness": 0.433,
+    "brightnessStart": 0.5864628152035439,
+    "noisiness": 0.003,
+    "peakDb": 1.8
+  },
+  "impactMetal_medium_002.ogg": {
+    "durationMs": 120,
+    "decayMs": 20,
+    "brightness": 0.427,
+    "brightnessStart": 0.5290654692241362,
+    "noisiness": 0.002,
+    "peakDb": 1.9
+  },
+  "impactMetal_medium_003.ogg": {
+    "durationMs": 250,
+    "decayMs": 40,
+    "brightness": 0.502,
+    "brightnessStart": 0.6945268093177599,
+    "noisiness": 0.002,
+    "peakDb": 1.6
+  },
+  "impactMetal_medium_004.ogg": {
+    "durationMs": 110,
+    "decayMs": 20,
+    "brightness": 0.458,
+    "brightnessStart": 0.5652267168429197,
+    "noisiness": 0.003,
+    "peakDb": 2
+  },
+  "impactMining_000.ogg": {
+    "durationMs": 540,
+    "decayMs": 100,
+    "brightness": 0.457,
+    "brightnessStart": 0.5520583649942482,
+    "noisiness": 0.003,
+    "peakDb": 1.9
+  },
+  "impactMining_001.ogg": {
+    "durationMs": 500,
+    "decayMs": 90,
+    "brightness": 0.511,
+    "brightnessStart": 0.6256641873827239,
+    "noisiness": 0.01,
+    "peakDb": 2
+  },
+  "impactMining_002.ogg": {
+    "durationMs": 460,
+    "decayMs": 80,
+    "brightness": 0.421,
+    "brightnessStart": 0.6452695916426266,
+    "noisiness": 0.017,
+    "peakDb": 1.8
+  },
+  "impactMining_003.ogg": {
+    "durationMs": 570,
+    "decayMs": 100,
+    "brightness": 0.501,
+    "brightnessStart": 0.5744099019170547,
+    "noisiness": 0.004,
+    "peakDb": 2
+  },
+  "impactMining_004.ogg": {
+    "durationMs": 490,
+    "decayMs": 130,
+    "brightness": 0.388,
+    "brightnessStart": 0.48963934655197205,
+    "noisiness": 0.01,
+    "peakDb": 2.1
+  },
+  "impactPlank_medium_000.ogg": {
+    "durationMs": 180,
+    "decayMs": 30,
+    "brightness": 0.368,
+    "brightnessStart": 0.5494583841922676,
+    "noisiness": 0.003,
+    "peakDb": 1.8
+  },
+  "impactPlank_medium_001.ogg": {
+    "durationMs": 180,
+    "decayMs": 50,
+    "brightness": 0.291,
+    "brightnessStart": 0.4821843828436833,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "impactPlank_medium_002.ogg": {
+    "durationMs": 190,
+    "decayMs": 50,
+    "brightness": 0.309,
+    "brightnessStart": 0.4754949036777454,
+    "noisiness": 0.002,
+    "peakDb": 2
+  },
+  "impactPlank_medium_003.ogg": {
+    "durationMs": 180,
+    "decayMs": 50,
+    "brightness": 0.303,
+    "brightnessStart": 0.43818759868441876,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "impactPlank_medium_004.ogg": {
+    "durationMs": 190,
+    "decayMs": 50,
+    "brightness": 0.349,
+    "brightnessStart": 0.6549092598562,
+    "noisiness": 0.005,
+    "peakDb": 2.1
+  },
+  "impactPlate_heavy_000.ogg": {
+    "durationMs": 400,
+    "decayMs": 70,
+    "brightness": 0.508,
+    "brightnessStart": 0.7539943148834305,
+    "noisiness": 0.042,
+    "peakDb": 2
+  },
+  "impactPlate_heavy_001.ogg": {
+    "durationMs": 350,
+    "decayMs": 120,
+    "brightness": 0.445,
+    "brightnessStart": 0.6586343214574263,
+    "noisiness": 0.025,
+    "peakDb": 2.1
+  },
+  "impactPlate_heavy_002.ogg": {
+    "durationMs": 480,
+    "decayMs": 90,
+    "brightness": 0.466,
+    "brightnessStart": 0.8034419935008907,
+    "noisiness": 0.049,
+    "peakDb": 1.6
+  },
+  "impactPlate_heavy_003.ogg": {
+    "durationMs": 340,
+    "decayMs": 120,
+    "brightness": 0.424,
+    "brightnessStart": 0.6529085410355855,
+    "noisiness": 0.025,
+    "peakDb": 1.9
+  },
+  "impactPlate_heavy_004.ogg": {
+    "durationMs": 560,
+    "decayMs": 100,
+    "brightness": 0.473,
+    "brightnessStart": 0.7761727993645172,
+    "noisiness": 0.034,
+    "peakDb": 2.4
+  },
+  "impactPlate_light_000.ogg": {
+    "durationMs": 440,
+    "decayMs": 40,
+    "brightness": 0.49,
+    "brightnessStart": 0.7705333311165434,
+    "noisiness": 0.11,
+    "peakDb": 2
+  },
+  "impactPlate_light_001.ogg": {
+    "durationMs": 580,
+    "decayMs": 50,
+    "brightness": 0.511,
+    "brightnessStart": 0.8071273857728682,
+    "noisiness": 0.116,
+    "peakDb": 1.7
+  },
+  "impactPlate_light_002.ogg": {
+    "durationMs": 430,
+    "decayMs": 40,
+    "brightness": 0.512,
+    "brightnessStart": 0.7950595062304815,
+    "noisiness": 0.098,
+    "peakDb": 2.1
+  },
+  "impactPlate_light_003.ogg": {
+    "durationMs": 450,
+    "decayMs": 40,
+    "brightness": 0.564,
+    "brightnessStart": 0.8111921066295791,
+    "noisiness": 0.096,
+    "peakDb": 1.9
+  },
+  "impactPlate_light_004.ogg": {
+    "durationMs": 530,
+    "decayMs": 50,
+    "brightness": 0.538,
+    "brightnessStart": 0.8058682135569345,
+    "noisiness": 0.081,
+    "peakDb": 1.7
+  },
+  "impactPlate_medium_000.ogg": {
+    "durationMs": 510,
+    "decayMs": 50,
+    "brightness": 0.459,
+    "brightnessStart": 0.7545973168305276,
+    "noisiness": 0.051,
+    "peakDb": 1.7
+  },
+  "impactPlate_medium_001.ogg": {
+    "durationMs": 600,
+    "decayMs": 50,
+    "brightness": 0.494,
+    "brightnessStart": 0.7709853759994972,
+    "noisiness": 0.089,
+    "peakDb": 1.9
+  },
+  "impactPlate_medium_002.ogg": {
+    "durationMs": 490,
+    "decayMs": 90,
+    "brightness": 0.46,
+    "brightnessStart": 0.7906669644472981,
+    "noisiness": 0.059,
+    "peakDb": 1.9
+  },
+  "impactPlate_medium_003.ogg": {
+    "durationMs": 560,
+    "decayMs": 100,
+    "brightness": 0.425,
+    "brightnessStart": 0.7503941716100097,
+    "noisiness": 0.038,
+    "peakDb": 1.8
+  },
+  "impactPlate_medium_004.ogg": {
+    "durationMs": 500,
+    "decayMs": 90,
+    "brightness": 0.481,
+    "brightnessStart": 0.764890664616789,
+    "noisiness": 0.074,
+    "peakDb": 2
+  },
+  "impactPunch_heavy_000.ogg": {
+    "durationMs": 430,
+    "decayMs": 150,
+    "brightness": 0.142,
+    "brightnessStart": 0.13944820568790336,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "impactPunch_heavy_001.ogg": {
+    "durationMs": 360,
+    "decayMs": 130,
+    "brightness": 0.245,
+    "brightnessStart": 0.4162636772504807,
+    "noisiness": 0.002,
+    "peakDb": 1.8
+  },
+  "impactPunch_heavy_002.ogg": {
+    "durationMs": 310,
+    "decayMs": 110,
+    "brightness": 0.044,
+    "brightnessStart": 0.18929891171939883,
+    "noisiness": 0,
+    "peakDb": 2
+  },
+  "impactPunch_heavy_003.ogg": {
+    "durationMs": 320,
+    "decayMs": 110,
+    "brightness": 0.272,
+    "brightnessStart": 0.41414868340669914,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "impactPunch_heavy_004.ogg": {
+    "durationMs": 360,
+    "decayMs": 130,
+    "brightness": 0.171,
+    "brightnessStart": 0.3011254021279409,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "impactPunch_medium_000.ogg": {
+    "durationMs": 220,
+    "decayMs": 100,
+    "brightness": 0.313,
+    "brightnessStart": 0.25026075270932374,
+    "noisiness": 0.001,
+    "peakDb": 1.9
+  },
+  "impactPunch_medium_001.ogg": {
+    "durationMs": 210,
+    "decayMs": 90,
+    "brightness": 0.364,
+    "brightnessStart": 0.2854467161117912,
+    "noisiness": 0.001,
+    "peakDb": 1.9
+  },
+  "impactPunch_medium_002.ogg": {
+    "durationMs": 270,
+    "decayMs": 120,
+    "brightness": 0.492,
+    "brightnessStart": 0.22843296616798225,
+    "noisiness": 0.003,
+    "peakDb": 2.2
+  },
+  "impactPunch_medium_003.ogg": {
+    "durationMs": 230,
+    "decayMs": 100,
+    "brightness": 0.409,
+    "brightnessStart": 0.32589955354067435,
+    "noisiness": 0.002,
+    "peakDb": 2.1
+  },
+  "impactPunch_medium_004.ogg": {
+    "durationMs": 270,
+    "decayMs": 120,
+    "brightness": 0.295,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "impactSoft_heavy_000.ogg": {
+    "durationMs": 500,
+    "decayMs": 90,
+    "brightness": 0,
+    "brightnessStart": 0,
+    "noisiness": 0,
+    "peakDb": 2.1
+  },
+  "impactSoft_heavy_001.ogg": {
+    "durationMs": 560,
+    "decayMs": 100,
+    "brightness": 0.052,
+    "brightnessStart": 0,
+    "noisiness": 0,
+    "peakDb": 2
+  },
+  "impactSoft_heavy_002.ogg": {
+    "durationMs": 560,
+    "decayMs": 100,
+    "brightness": 0.052,
+    "brightnessStart": 0,
+    "noisiness": 0,
+    "peakDb": 2.1
+  },
+  "impactSoft_heavy_003.ogg": {
+    "durationMs": 530,
+    "decayMs": 90,
+    "brightness": 0.033,
+    "brightnessStart": 0,
+    "noisiness": 0,
+    "peakDb": 2
+  },
+  "impactSoft_heavy_004.ogg": {
+    "durationMs": 490,
+    "decayMs": 90,
+    "brightness": 0.058,
+    "brightnessStart": 0,
+    "noisiness": 0,
+    "peakDb": 2
+  },
+  "impactSoft_medium_000.ogg": {
+    "durationMs": 120,
+    "decayMs": 30,
+    "brightness": 0.129,
+    "brightnessStart": 0,
+    "noisiness": 0.002,
+    "peakDb": 2
+  },
+  "impactSoft_medium_001.ogg": {
+    "durationMs": 180,
+    "decayMs": 30,
+    "brightness": 0.065,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "impactSoft_medium_002.ogg": {
+    "durationMs": 140,
+    "decayMs": 40,
+    "brightness": 0.139,
+    "brightnessStart": 0,
+    "noisiness": 0.002,
+    "peakDb": 2
+  },
+  "impactSoft_medium_003.ogg": {
+    "durationMs": 140,
+    "decayMs": 40,
+    "brightness": 0.125,
+    "brightnessStart": 0,
+    "noisiness": 0.002,
+    "peakDb": 2.1
+  },
+  "impactSoft_medium_004.ogg": {
+    "durationMs": 150,
+    "decayMs": 30,
+    "brightness": 0.131,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "impactTin_medium_000.ogg": {
+    "durationMs": 160,
+    "decayMs": 30,
+    "brightness": 0.425,
+    "brightnessStart": 0.5020398449868302,
+    "noisiness": 0.003,
+    "peakDb": 2
+  },
+  "impactTin_medium_001.ogg": {
+    "durationMs": 180,
+    "decayMs": 30,
+    "brightness": 0.331,
+    "brightnessStart": 0.5524281271170268,
+    "noisiness": 0.006,
+    "peakDb": 1.5
+  },
+  "impactTin_medium_002.ogg": {
+    "durationMs": 140,
+    "decayMs": 20,
+    "brightness": 0.467,
+    "brightnessStart": 0.53712593513273,
+    "noisiness": 0.008,
+    "peakDb": 1.9
+  },
+  "impactTin_medium_003.ogg": {
+    "durationMs": 220,
+    "decayMs": 20,
+    "brightness": 0.297,
+    "brightnessStart": 0.5610810882598832,
+    "noisiness": 0.008,
+    "peakDb": 1.9
+  },
+  "impactTin_medium_004.ogg": {
+    "durationMs": 180,
+    "decayMs": 30,
+    "brightness": 0.254,
+    "brightnessStart": 0.5598758448933329,
+    "noisiness": 0.001,
+    "peakDb": 1.8
+  },
+  "impactWood_heavy_000.ogg": {
+    "durationMs": 310,
+    "decayMs": 30,
+    "brightness": 0.065,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "impactWood_heavy_001.ogg": {
+    "durationMs": 310,
+    "decayMs": 30,
+    "brightness": 0.065,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "impactWood_heavy_002.ogg": {
+    "durationMs": 310,
+    "decayMs": 30,
+    "brightness": 0.065,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "impactWood_heavy_003.ogg": {
+    "durationMs": 310,
+    "decayMs": 30,
+    "brightness": 0.065,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "impactWood_heavy_004.ogg": {
+    "durationMs": 310,
+    "decayMs": 30,
+    "brightness": 0.065,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "impactWood_light_000.ogg": {
+    "durationMs": 100,
+    "decayMs": 20,
+    "brightness": 0.193,
+    "brightnessStart": 0.2744759682551463,
+    "noisiness": 0,
+    "peakDb": 1.9
+  },
+  "impactWood_light_001.ogg": {
+    "durationMs": 260,
+    "decayMs": 20,
+    "brightness": 0.125,
+    "brightnessStart": 0.1713587432018212,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "impactWood_light_002.ogg": {
+    "durationMs": 100,
+    "decayMs": 20,
+    "brightness": 0.179,
+    "brightnessStart": 0.2537837112674585,
+    "noisiness": 0,
+    "peakDb": 1.9
+  },
+  "impactWood_light_003.ogg": {
+    "durationMs": 260,
+    "decayMs": 20,
+    "brightness": 0.113,
+    "brightnessStart": 0.1603657118607009,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "impactWood_light_004.ogg": {
+    "durationMs": 260,
+    "decayMs": 20,
+    "brightness": 0.149,
+    "brightnessStart": 0.21514938012277426,
+    "noisiness": 0.001,
+    "peakDb": 1.8
+  },
+  "impactWood_medium_000.ogg": {
+    "durationMs": 320,
+    "decayMs": 60,
+    "brightness": 0.06,
+    "brightnessStart": 0.05833285889359096,
+    "noisiness": 0,
+    "peakDb": 2
+  },
+  "impactWood_medium_001.ogg": {
+    "durationMs": 320,
+    "decayMs": 60,
+    "brightness": 0.058,
+    "brightnessStart": 0.050580774658153936,
+    "noisiness": 0,
+    "peakDb": 2
+  },
+  "impactWood_medium_002.ogg": {
+    "durationMs": 310,
+    "decayMs": 50,
+    "brightness": 0.038,
+    "brightnessStart": 0.12034647970133149,
+    "noisiness": 0,
+    "peakDb": 1.9
+  },
+  "impactWood_medium_003.ogg": {
+    "durationMs": 310,
+    "decayMs": 50,
+    "brightness": 0.021,
+    "brightnessStart": 0.08298038519195602,
+    "noisiness": 0,
+    "peakDb": 2
+  },
+  "impactWood_medium_004.ogg": {
+    "durationMs": 220,
+    "decayMs": 60,
+    "brightness": 0.016,
+    "brightnessStart": 0.0768086941042475,
+    "noisiness": 0,
+    "peakDb": 1.9
+  }
+}

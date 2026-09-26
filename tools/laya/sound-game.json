@@ -1,0 +1,370 @@
+{
+  "counter_1.ogg": {
+    "durationMs": 1130,
+    "decayMs": 310,
+    "brightness": 0.287,
+    "brightnessStart": 0.33558289292503457,
+    "noisiness": 0,
+    "peakDb": 1.9
+  },
+  "counter_2.ogg": {
+    "durationMs": 1300,
+    "decayMs": 230,
+    "brightness": 0.264,
+    "brightnessStart": 0.31948254509691476,
+    "noisiness": 0,
+    "peakDb": 1.8
+  },
+  "dodge_1.ogg": {
+    "durationMs": 560,
+    "decayMs": 50,
+    "brightness": 0.646,
+    "brightnessStart": 0.5864008352431713,
+    "noisiness": 0.087,
+    "peakDb": -1
+  },
+  "dodge_2.ogg": {
+    "durationMs": 350,
+    "decayMs": 30,
+    "brightness": 0.655,
+    "brightnessStart": 0.8775144286708249,
+    "noisiness": 0.074,
+    "peakDb": -7.3
+  },
+  "dodge_3.ogg": {
+    "durationMs": 480,
+    "decayMs": 260,
+    "brightness": 0.58,
+    "brightnessStart": 0.8552477151855994,
+    "noisiness": 0.048,
+    "peakDb": -8.7
+  },
+  "enemy_block_1.ogg": {
+    "durationMs": 260,
+    "decayMs": 50,
+    "brightness": 0.48,
+    "brightnessStart": 0.6751084275057864,
+    "noisiness": 0.001,
+    "peakDb": 1.9
+  },
+  "enemy_block_2.ogg": {
+    "durationMs": 140,
+    "decayMs": 40,
+    "brightness": 0.433,
+    "brightnessStart": 0.5864628152035439,
+    "noisiness": 0.003,
+    "peakDb": 1.8
+  },
+  "enemy_block_3.ogg": {
+    "durationMs": 120,
+    "decayMs": 20,
+    "brightness": 0.427,
+    "brightnessStart": 0.5290654692241362,
+    "noisiness": 0.002,
+    "peakDb": 1.9
+  },
+  "felled_1.ogg": {
+    "durationMs": 210,
+    "decayMs": 20,
+    "brightness": 0.77,
+    "brightnessStart": 1,
+    "noisiness": 0.07,
+    "peakDb": 3.1
+  },
+  "guard_break_1.ogg": {
+    "durationMs": 240,
+    "decayMs": 40,
+    "brightness": 0.501,
+    "brightnessStart": 0.4834814682525834,
+    "noisiness": 0.001,
+    "peakDb": 1.9
+  },
+  "guard_break_2.ogg": {
+    "durationMs": 430,
+    "decayMs": 40,
+    "brightness": 0.361,
+    "brightnessStart": 0.49712922890540046,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "hit_dagger_1.ogg": {
+    "durationMs": 120,
+    "decayMs": 30,
+    "brightness": 0.129,
+    "brightnessStart": 0,
+    "noisiness": 0.002,
+    "peakDb": 2
+  },
+  "hit_dagger_2.ogg": {
+    "durationMs": 180,
+    "decayMs": 30,
+    "brightness": 0.065,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "hit_dagger_3.ogg": {
+    "durationMs": 140,
+    "decayMs": 40,
+    "brightness": 0.139,
+    "brightnessStart": 0,
+    "noisiness": 0.002,
+    "peakDb": 2
+  },
+  "hit_hammer_1.ogg": {
+    "durationMs": 310,
+    "decayMs": 30,
+    "brightness": 0.065,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "hit_hammer_2.ogg": {
+    "durationMs": 310,
+    "decayMs": 30,
+    "brightness": 0.065,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "hit_hammer_3.ogg": {
+    "durationMs": 310,
+    "decayMs": 30,
+    "brightness": 0.065,
+    "brightnessStart": 0,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "hit_mace_1.ogg": {
+    "durationMs": 430,
+    "decayMs": 150,
+    "brightness": 0.142,
+    "brightnessStart": 0.13944820568790336,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "hit_mace_2.ogg": {
+    "durationMs": 360,
+    "decayMs": 130,
+    "brightness": 0.245,
+    "brightnessStart": 0.4162636772504807,
+    "noisiness": 0.002,
+    "peakDb": 1.8
+  },
+  "hit_mace_3.ogg": {
+    "durationMs": 310,
+    "decayMs": 110,
+    "brightness": 0.044,
+    "brightnessStart": 0.18929891171939883,
+    "noisiness": 0,
+    "peakDb": 2
+  },
+  "hit_spear_1.ogg": {
+    "durationMs": 220,
+    "decayMs": 100,
+    "brightness": 0.313,
+    "brightnessStart": 0.25026075270932374,
+    "noisiness": 0.001,
+    "peakDb": 1.9
+  },
+  "hit_spear_2.ogg": {
+    "durationMs": 210,
+    "decayMs": 90,
+    "brightness": 0.364,
+    "brightnessStart": 0.2854467161117912,
+    "noisiness": 0.001,
+    "peakDb": 1.9
+  },
+  "hit_spear_3.ogg": {
+    "durationMs": 270,
+    "decayMs": 120,
+    "brightness": 0.492,
+    "brightnessStart": 0.22843296616798225,
+    "noisiness": 0.003,
+    "peakDb": 2.2
+  },
+  "hit_sword_1.ogg": {
+    "durationMs": 360,
+    "decayMs": 250,
+    "brightness": 0.915,
+    "brightnessStart": 0.8514569989412988,
+    "noisiness": 0.164,
+    "peakDb": 0.2
+  },
+  "hit_sword_2.ogg": {
+    "durationMs": 430,
+    "decayMs": 40,
+    "brightness": 0.928,
+    "brightnessStart": 0.8924008014854441,
+    "noisiness": 0.196,
+    "peakDb": 3.5
+  },
+  "hit_weak_1.ogg": {
+    "durationMs": 510,
+    "decayMs": 50,
+    "brightness": 0.459,
+    "brightnessStart": 0.7545973168305276,
+    "noisiness": 0.051,
+    "peakDb": 1.7
+  },
+  "hit_weak_2.ogg": {
+    "durationMs": 600,
+    "decayMs": 50,
+    "brightness": 0.494,
+    "brightnessStart": 0.7709853759994972,
+    "noisiness": 0.089,
+    "peakDb": 1.9
+  },
+  "hit_weak_3.ogg": {
+    "durationMs": 490,
+    "decayMs": 90,
+    "brightness": 0.46,
+    "brightnessStart": 0.7906669644472981,
+    "noisiness": 0.059,
+    "peakDb": 1.9
+  },
+  "parried_1.ogg": {
+    "durationMs": 170,
+    "decayMs": 10,
+    "brightness": 0.442,
+    "brightnessStart": 0.664674836735496,
+    "noisiness": 0.005,
+    "peakDb": 2.1
+  },
+  "parried_2.ogg": {
+    "durationMs": 360,
+    "decayMs": 30,
+    "brightness": 0.435,
+    "brightnessStart": 0.6244569374043041,
+    "noisiness": 0.002,
+    "peakDb": 1.9
+  },
+  "player_block_1.ogg": {
+    "durationMs": 400,
+    "decayMs": 70,
+    "brightness": 0.508,
+    "brightnessStart": 0.7539943148834305,
+    "noisiness": 0.042,
+    "peakDb": 2
+  },
+  "player_block_2.ogg": {
+    "durationMs": 350,
+    "decayMs": 120,
+    "brightness": 0.445,
+    "brightnessStart": 0.6586343214574263,
+    "noisiness": 0.025,
+    "peakDb": 2.1
+  },
+  "player_block_3.ogg": {
+    "durationMs": 480,
+    "decayMs": 90,
+    "brightness": 0.466,
+    "brightnessStart": 0.8034419935008907,
+    "noisiness": 0.049,
+    "peakDb": 1.6
+  },
+  "player_hit_1.ogg": {
+    "durationMs": 320,
+    "decayMs": 110,
+    "brightness": 0.272,
+    "brightnessStart": 0.41414868340669914,
+    "noisiness": 0.001,
+    "peakDb": 2.1
+  },
+  "player_hit_2.ogg": {
+    "durationMs": 360,
+    "decayMs": 130,
+    "brightness": 0.171,
+    "brightnessStart": 0.3011254021279409,
+    "noisiness": 0.001,
+    "peakDb": 2
+  },
+  "swing_heavy_1.ogg": {
+    "durationMs": 770,
+    "decayMs": 70,
+    "brightness": 0.882,
+    "brightnessStart": 0.8715690641079946,
+    "noisiness": 0.348,
+    "peakDb": -0.1
+  },
+  "swing_heavy_2.ogg": {
+    "durationMs": 770,
+    "decayMs": 70,
+    "brightness": 0.887,
+    "brightnessStart": 0.8205644752857796,
+    "noisiness": 0.314,
+    "peakDb": 1
+  },
+  "swing_heavy_3.ogg": {
+    "durationMs": 700,
+    "decayMs": 60,
+    "brightness": 0.882,
+    "brightnessStart": 0.8784886490407242,
+    "noisiness": 0.369,
+    "peakDb": -1.6
+  },
+  "swing_light_1.ogg": {
+    "durationMs": 160,
+    "decayMs": 10,
+    "brightness": 0.847,
+    "brightnessStart": 0.9698968278364112,
+    "noisiness": 0.19,
+    "peakDb": 0.5
+  },
+  "swing_light_2.ogg": {
+    "durationMs": 580,
+    "decayMs": 50,
+    "brightness": 0.874,
+    "brightnessStart": 1,
+    "noisiness": 0.246,
+    "peakDb": 1.4
+  },
+  "swing_light_3.ogg": {
+    "durationMs": 600,
+    "decayMs": 50,
+    "brightness": 0.883,
+    "brightnessStart": 0.943130834258891,
+    "noisiness": 0.294,
+    "peakDb": 0.8
+  },
+  "telegraph_1.ogg": {
+    "durationMs": 340,
+    "decayMs": 30,
+    "brightness": 0.961,
+    "brightnessStart": 0.8931176347871839,
+    "noisiness": 0.298,
+    "peakDb": -5
+  },
+  "telegraph_2.ogg": {
+    "durationMs": 360,
+    "decayMs": 30,
+    "brightness": 0.932,
+    "brightnessStart": 0.8443702712968268,
+    "noisiness": 0.268,
+    "peakDb": -2.7
+  },
+  "telegraph_3.ogg": {
+    "durationMs": 320,
+    "decayMs": 30,
+    "brightness": 0.845,
+    "brightnessStart": 0.8520312705590244,
+    "noisiness": 0.209,
+    "peakDb": 1.9
+  },
+  "ui_tap_1.ogg": {
+    "durationMs": 100,
+    "decayMs": 10,
+    "brightness": 0.497,
+    "brightnessStart": 0.8196260378696048,
+    "noisiness": 0.225,
+    "peakDb": -1.4
+  },
+  "ui_tap_2.ogg": {
+    "durationMs": 20,
+    "decayMs": 10,
+    "brightness": 0.665,
+    "brightnessStart": 0.4645443883573516,
+    "noisiness": 0.01,
+    "peakDb": -0.9
+  }
+}

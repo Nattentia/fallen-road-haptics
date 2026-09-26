@@ -1,0 +1,41 @@
+name: Laya sound → material check
+
+# Can the phone's Laya bundle judge hardness and weight from a sound put into
+# words (tools/laya/sound_eval.py)? Report only: it never blocks the app build.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/laya/sound_eval.py'
+      - 'tools/laya/sound-kenney.json'
+      - 'tools/laya/sound-game.json'
+      - '.github/workflows/laya-sound.yml'
+  workflow_dispatch:
+
+jobs:
+  sound:
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      MODEL: aac6fef/laya-multilingual-coreml-ane
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        with:
+          path: .laya-cache
+          key: laya-eval-${{ env.MODEL }}
+      - name: Install laya-coreml
+        run: pip install 'laya-coreml @ git+https://github.com/mizorewww/laya-coreml@4619e0483f07adf39068532e85b42ec2347edb83'
+      - name: Check
+        run: |
+          set -o pipefail
+          python tools/laya/sound_eval.py --model "$MODEL" | tee summary.md
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sound
+          path: sound-report.json
