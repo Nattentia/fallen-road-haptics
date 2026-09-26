@@ -195,3 +195,27 @@ describe('AHAP export', () => {
     expect(validateAhap(bad)).not.toEqual([]);
   });
 });
+
+describe('clipping and windows', () => {
+  it('keeps what is left of a score from a time on', async () => {
+    const { clipScore, windowEnergy, energyOf } = await import('./score');
+    const s = { ...strike, at: 1000 };
+    const rest = clipScore(s, 1050, 'r');
+    expect(rest.at).toBe(1050);
+    expect(rest.events).toEqual([
+      {
+        kind: 'continuous',
+        t: 0,
+        duration: 55,
+        intensity: 0.8,
+        sharpness: 0.3,
+      },
+    ]);
+    expect(rest.curves[0]!.points[0]!.value).toBeCloseTo(0.55);
+    expect(clipScore(s, 900, 'r').events).toHaveLength(2);
+    expect(clipScore(s, 2000, 'r').events).toEqual([]);
+    const whole = windowEnergy(s, 0, 10_000);
+    expect(whole).toBeCloseTo(energyOf(s));
+    expect(windowEnergy(s, 1000, 1030)).toBeLessThan(whole);
+  });
+});

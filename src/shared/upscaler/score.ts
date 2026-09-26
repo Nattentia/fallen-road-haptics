@@ -89,6 +89,83 @@ export const bakeCurves = (s: Score, stepMs = 10): Score => {
 };
 
 // ---------------------------------------------------------------------------
+// Felt size
+// ---------------------------------------------------------------------------
+
+/**
+ * How long a transient counts for when sizes are compared, ms. The felt
+ * energy of a score is approximated as intensity × time (v4 5.2); a tap has
+ * no duration, so it is given this equivalent length (hypothesis, D3).
+ */
+export const TRANSIENT_EQUIV_MS = 20;
+
+/** Felt energy of a score: intensity × ms summed over its events. */
+export const energyOf = (s: Score): number =>
+  bakeCurves(s, 5).events.reduce(
+    (sum, e) =>
+      sum +
+      e.intensity * (e.kind === 'continuous' ? e.duration : TRANSIENT_EQUIV_MS),
+    0
+  );
+
+/**
+ * Intensity the score produces at absolute time `t`: continuous events at
+ * their curve-shaped level, transients over their equivalent length.
+ */
+export const levelAt = (s: Score, t: number): number => {
+  const local = t - s.at;
+  let level = 0;
+  for (const e of s.events) {
+    const span = e.kind === 'continuous' ? e.duration : TRANSIENT_EQUIV_MS;
+    if (local < e.t || local >= e.t + span) continue;
+    level +=
+      e.kind === 'continuous' ? shaped(e, s, local).intensity : e.intensity;
+  }
+  return level;
+};
+
+/** Felt energy of a score inside the absolute window [from, to). */
+export const windowEnergy = (s: Score, from: number, to: number): number => {
+  let sum = 0;
+  for (const e of bakeCurves(s, 5).events) {
+    const span = e.kind === 'continuous' ? e.duration : TRANSIENT_EQUIV_MS;
+    const start = s.at + e.t;
+    const overlap = Math.min(to, start + span) - Math.max(from, start);
+    if (overlap > 0) sum += e.intensity * overlap;
+  }
+  return sum;
+};
+
+/**
+ * What is left of a score from absolute time `from`: later events move to
+ * the new zero, a continuous event under way is shortened, and curves are
+ * cut at `from` starting from the value they had there.
+ */
+export const clipScore = (s: Score, from: number, id: string): Score => {
+  const cut = Math.max(0, from - s.at);
+  const events: ScoreEvent[] = [];
+  for (const e of s.events) {
+    if (e.kind === 'transient') {
+      if (e.t >= cut) events.push({ ...e, t: e.t - cut });
+    } else if (e.t + e.duration > cut) {
+      const start = Math.max(e.t, cut);
+      events.push({ ...e, t: start - cut, duration: e.t + e.duration - start });
+    }
+  }
+  const curves = s.curves.flatMap((c) => {
+    const neutral = c.control === 'intensity' ? 1 : 0;
+    const later = c.points.filter((p) => p.t > cut);
+    if (later.length === 0) return [];
+    const points = [
+      { t: 0, value: curveValueAt(c.points, cut, neutral) },
+      ...later.map((p) => ({ ...p, t: p.t - cut })),
+    ];
+    return points.length >= 2 ? [{ ...c, points }] : [];
+  });
+  return { ...s, id, at: s.at + cut, events, curves };
+};
+
+// ---------------------------------------------------------------------------
 // AHAP
 // ---------------------------------------------------------------------------
 

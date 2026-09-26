@@ -5,9 +5,9 @@ import type {
   UpscalerEngine,
   UpscalerInput,
   UpscalerStep,
-} from '../../shared/upscaler/contract';
-import type { EventSignal, Signal } from '../../shared/haptics/signals';
-import { UpscalerLink } from './upscalerLink';
+} from './contract';
+import type { EventSignal, Signal } from '../haptics/signals';
+import { UpscalerLink } from './link';
 
 const event = (base?: string, t = 100): EventSignal => ({
   kind: 'event',

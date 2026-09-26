@@ -1,4 +1,4 @@
-import type { Signal } from '../../shared/haptics/signals';
+import type { Signal } from '../haptics/signals';
 import {
   BASE_GAIN_MAX,
   BASE_GAIN_MIN,
@@ -7,7 +7,7 @@ import {
   type Hint,
   type UpscalerEngine,
   type UpscalerStep,
-} from '../../shared/upscaler/contract';
+} from './contract';
 
 /**
  * Sits between the game and the native player. It hands each signal to the

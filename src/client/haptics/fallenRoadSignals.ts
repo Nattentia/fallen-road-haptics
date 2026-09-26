@@ -229,6 +229,7 @@ export class FallenRoadSignals {
       target: 'other',
       outcome: 'none',
       description: `player unleashes ${burst.name.toLowerCase()}`,
+      gauges: ['burst'],
       base: 'burst_start',
       ...chainRef(this.burstChain, 'start'),
     });
