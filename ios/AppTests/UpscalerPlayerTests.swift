@@ -1,8 +1,8 @@
 import XCTest
 
 /// Records what the player asks of the device.
-private final class FakeBackend: HapticBackend {
-    enum Call: Equatable {
+final class FakeBackend: HapticBackend {
+    enum Call: Hashable {
         case start(String, Double)
         case stop(Int, Double, Double)
         case hold(Double, Double, Double)
@@ -82,11 +82,12 @@ final class UpscalerPlayerTests: XCTestCase {
         backend.nowMs = 40
         backend.calls = []
         player.apply(.revise(voice: "v", from: 60, score: score("new", at: 60)))
-        XCTAssertEqual(backend.calls, [
+        let expected: [FakeBackend.Call] = [
             .stop(1, 60, UpscalerPlayer.reviseFadeMs),
             .stop(2, 40, 0),
             .start("new", 60),
-        ])
+        ]
+        XCTAssertEqual(backend.calls, expected)
         XCTAssertEqual(player.voices["v"]?.scheduled.map(\.scoreId), ["new"])
     }
 
@@ -104,12 +105,13 @@ final class UpscalerPlayerTests: XCTestCase {
         player.apply(.hold(voice: "v", stream: "s1", at: 5, intensity: 0.4, sharpness: 0.6))
         player.apply(.drive(voice: "v", stream: "s1", at: 16, intensity: 0.5, sharpness: 0.7, rampMs: 16))
         player.apply(.drive(voice: "v", stream: "s2", at: 20, intensity: 0.2, sharpness: 0.2, rampMs: 16))
-        XCTAssertEqual(backend.calls, [
+        let expected: [FakeBackend.Call] = [
             .hold(0.3, 0.6, 0),
             .drive(1, 0.4, 0.6, 5, 0),
             .drive(1, 0.5, 0.7, 16, 16),
             .hold(0.2, 0.2, 20),
-        ])
+        ]
+        XCTAssertEqual(backend.calls, expected)
         XCTAssertEqual(player.voices["v"]?.holds, ["s1": 1, "s2": 2])
         player.apply(.unhold(voice: "v", stream: "s1", at: 30, fadeMs: 20))
         XCTAssertEqual(backend.calls.last, .stop(1, 30, 20))
@@ -123,9 +125,8 @@ final class UpscalerPlayerTests: XCTestCase {
         backend.nowMs = 20
         backend.calls = []
         player.apply(.release(voice: "v", at: 20, fadeMs: 40))
-        XCTAssertEqual(Set(backend.calls.map { "\($0)" }), Set([
-            .stop(1, 20, 40), .stop(2, 20, 40), .stop(3, 20, 0),
-        ].map { "\($0)" }))
+        let expected: Set<FakeBackend.Call> = [.stop(1, 20, 40), .stop(2, 20, 40), .stop(3, 20, 0)]
+        XCTAssertEqual(Set(backend.calls), expected)
         XCTAssertNil(player.voices["v"])
     }
 
