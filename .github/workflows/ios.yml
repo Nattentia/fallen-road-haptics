@@ -23,7 +23,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Upscaler player logic tests on the simulator. The IPA is only built and
+  # published when they pass.
+  test:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          mkdir -p ios/App/web ios/App/Laya
+          cd ios && xcodegen generate
+      - name: Run logic tests
+        run: |
+          set -o pipefail
+          cd ios
+          device=$(xcrun simctl list devices available | grep -m1 -oE 'iPhone [^(]+' | sed 's/ *$//')
+          echo "Simulator: $device"
+          xcodebuild test -project FallenRoadHaptics.xcodeproj -scheme FallenRoadHapticsTests -destination "platform=iOS Simulator,name=$device" CODE_SIGNING_ALLOWED=NO | tail -n 80
+
   build:
+    needs: test
     runs-on: macos-15
     timeout-minutes: 60
     steps:

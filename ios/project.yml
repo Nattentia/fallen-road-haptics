@@ -44,3 +44,25 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.nattentia.fallenroadhaptics
+    # A shared scheme; once any target has one, Xcode stops making implicit ones.
+    scheme: {}
+  # Logic tests for the upscaler player, run on the simulator in CI. They
+  # compile the tested sources directly (no host app, no Laya assets).
+  FallenRoadHapticsTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: AppTests
+        excludes:
+          - Fixtures
+      - path: AppTests/Fixtures
+        type: folder
+        buildPhase: resources
+      - path: App/Sources/UpscalerContract.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.nattentia.fallenroadhaptics.tests
+        GENERATE_INFOPLIST_FILE: YES
+    scheme:
+      testTargets:
+        - FallenRoadHapticsTests
