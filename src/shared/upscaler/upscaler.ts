@@ -24,6 +24,7 @@ import { resolveTexture, textureOfMaterial } from './texture';
 import { Mixer } from './mixer';
 import { bounce, strike, type Shape } from './parts';
 import {
+  DEFAULT_MATERIAL,
   streamLevels,
   synthesize,
   type Material,
@@ -85,7 +86,10 @@ export class HapticUpscaler implements UpscalerEngine {
   readonly expected = new Map<string, { at: number; importance: number }>();
   private load: UpscalerLoad = 'full';
   /** Rests due before announced moments, by action voice (6-2). */
-  private readonly rests = new Map<string, { at: number; importance: number }>();
+  private readonly rests = new Map<
+    string,
+    { at: number; moment: number; importance: number }
+  >();
   private readonly sounds = new Map<string, SoundFeatures>();
   private seq = 0;
 
@@ -148,7 +152,16 @@ export class HapticUpscaler implements UpscalerEngine {
     const commands: Command[] = [];
     // Held streams pick the hint up at their next update. A phrase still sounding: only what has not played yet is re-made.
     const recent = this.recent.get(hint.voice);
-    if (recent && now < recent.until) {
+    // A moment whose texture came from its sound takes no material hints:
+    // re-making it would change nothing and duck the others again.
+    const sounded =
+      recent !== undefined &&
+      resolveTexture(
+        recent.signal.material,
+        DEFAULT_MATERIAL,
+        this.soundOf(recent.signal.sound)
+      ).fromSound;
+    if (recent && now < recent.until && !sounded) {
       const scores = this.phrase(recent.signal, hint.voice, recent.at, list);
       const rest = scores
         .map((s) => clipScore(s, now, this.nextId(hint.voice)))
@@ -184,7 +197,13 @@ export class HapticUpscaler implements UpscalerEngine {
       if (now >= r.at) {
         this.rests.delete(voice);
         commands.push(
-          ...this.mixer.duck(voice, r.importance, r.at, ANTICIPATION.restGain)
+          ...this.mixer.duck(
+            voice,
+            r.importance,
+            r.at,
+            ANTICIPATION.restGain,
+            r.moment
+          )
         );
       }
     return this.withWake({ baseGain: 1, commands });
@@ -218,7 +237,11 @@ export class HapticUpscaler implements UpscalerEngine {
     }
 
     const closing = step === 'resolve' || step === 'end';
-    if (closing) this.forgetExpected(voice);
+    // Any moment on an announced action is its result: it replaces the
+    // tension at once and there is no rest after it.
+    const anticipated = this.expected.has(voice);
+    const replacing = closing || anticipated;
+    if (replacing) this.forgetExpected(voice);
     const sounding = this.mixer.sounding(voice, now).length > 0;
     if (closing)
       commands.push(...this.closeStreams(voice, now, TIMING.streamFadeMs));
@@ -228,7 +251,7 @@ export class HapticUpscaler implements UpscalerEngine {
       input.paired && signal.base
         ? (this.bases.get(signal.base) ?? null)
         : null;
-    if (closing) this.mixer.forget(voice);
+    if (replacing) this.mixer.forget(voice);
     const placed = this.mixer.place(
       voice,
       signal.importance,
@@ -240,7 +263,7 @@ export class HapticUpscaler implements UpscalerEngine {
     commands.push(...placed.others);
     // Closing steps replace whatever the action was still playing.
     commands.push(
-      ...(closing && (sounding || placed.scores.length > 0)
+      ...(replacing && (sounding || placed.scores.length > 0)
         ? this.revise(voice, now, placed.scores)
         : this.play(voice, placed.scores))
     );
@@ -339,10 +362,13 @@ export class HapticUpscaler implements UpscalerEngine {
       signal.material,
       this.hints.get(voice) ?? []
     ).material;
+    // A stream this layer is not holding (new, or dropped while the layer
+    // was off) is held, whatever phase the game is in.
+    const fresh = !chain.streams.has(signal.id);
     chain.streams.set(signal.id, material);
     const levels = streamLevels(signal.value, material);
     const out: Command[] =
-      signal.phase === 'start'
+      signal.phase === 'start' || fresh
         ? [
             {
               op: 'hold',
@@ -507,8 +533,15 @@ export class HapticUpscaler implements UpscalerEngine {
     if (signal.clock !== 'expect' || !signal.chain) return [];
     const voice = signal.chain.id;
     const at = signal.at + input.gameToJs;
+    const again = this.expected.has(voice);
     this.expected.set(voice, { at, importance: signal.importance });
-    return this.anticipate(voice, at, signal.importance, input.now);
+    const commands = this.anticipate(voice, at, signal.importance, input.now);
+    if (!again) return commands;
+    // Announced again (new timing): the new tension replaces the old one.
+    this.mixer.forget(voice);
+    const scores = commands.flatMap((c) => (c.op === 'play' ? [c.score] : []));
+    for (const s of scores) this.mixer.track(voice, signal.importance, s);
+    return this.revise(voice, input.now, scores);
   }
 
   /**
@@ -522,9 +555,12 @@ export class HapticUpscaler implements UpscalerEngine {
     importance: number,
     now: number
   ): Command[] {
-    if (importance < ANTICIPATION.minImportance || at <= now) return [];
+    if (importance < ANTICIPATION.minImportance || at <= now) {
+      this.rests.delete(voice);
+      return [];
+    }
     const restAt = Math.max(now, at - ANTICIPATION.restMs);
-    this.rests.set(voice, { at: restAt, importance });
+    this.rests.set(voice, { at: restAt, moment: at, importance });
     if (this.load === 'light') return [];
     const shape = tension(restAt - now, importance);
     if (shape.events.length === 0) return [];

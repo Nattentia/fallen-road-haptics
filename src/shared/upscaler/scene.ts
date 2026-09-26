@@ -1,7 +1,7 @@
-import type { BaseVibration, Command, Score, ScoreEvent } from './contract';
+import type { BaseVibration, Command, Score } from './contract';
 import { baseScore } from './mixer';
 import { plotSvg, sampleLayer, type Sample } from './plot';
-import { clipScore, mergeToAhap, type Ahap } from './score';
+import { clipScore, mergeToAhap, truncateScore, type Ahap } from './score';
 
 /**
  * Scene export (plan units 8-1, 8-2): the commands the player received,
@@ -11,24 +11,6 @@ import { clipScore, mergeToAhap, type Ahap } from './score';
  */
 
 export type Scene = { base: Score[]; upscale: Score[] };
-
-/** What is left of a score before absolute time `until`. */
-const truncate = (s: Score, until: number): Score => {
-  const cut = until - s.at;
-  const events: ScoreEvent[] = [];
-  for (const e of s.events) {
-    if (e.t >= cut) continue;
-    events.push(
-      e.kind === 'continuous'
-        ? { ...e, duration: Math.min(e.duration, cut - e.t) }
-        : e
-    );
-  }
-  const curves = s.curves
-    .map((c) => ({ ...c, points: c.points.filter((p) => p.t <= cut) }))
-    .filter((c) => c.points.length >= 2);
-  return { ...s, events, curves };
-};
 
 const held = (
   voice: string,
@@ -60,7 +42,7 @@ export const sceneFromCommands = (commands: readonly Command[]): Scene => {
 
   const cutVoice = (voice: string, at: number) => {
     const kept = (voices.get(voice) ?? [])
-      .map((s) => (s.at >= at ? null : truncate(s, at)))
+      .map((s) => (s.at >= at ? null : truncateScore(s, at)))
       .filter((s): s is Score => s !== null && s.events.length > 0);
     voices.set(voice, kept);
   };
@@ -136,7 +118,7 @@ export const sceneFromCommands = (commands: readonly Command[]): Scene => {
 const within = (scores: readonly Score[], from: number, to: number): Score[] =>
   scores
     .filter((s) => s.at < to)
-    .map((s) => truncate(s.at < from ? clipScore(s, from, s.id) : s, to))
+    .map((s) => truncateScore(s.at < from ? clipScore(s, from, s.id) : s, to))
     .filter((s) => s.events.length > 0);
 
 export type SceneExport = {

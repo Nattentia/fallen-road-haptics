@@ -222,3 +222,102 @@ describe('thermal state → load', () => {
     expect(loadForThermal('something new')).toBe('full');
   });
 });
+
+describe('link breaker, review fixes', () => {
+  const quietStep = (): UpscalerStep => ({ baseGain: 1, commands: [] });
+
+  it('still hands a load change to the engine while the breaker is open', async () => {
+    let now = 0;
+    const loads: string[] = [];
+    const engine: UpscalerEngine = {
+      define: () => [],
+      defineSounds: () => undefined,
+      consume: () => {
+        throw new Error('broken');
+      },
+      hint: quietStep,
+      wake: quietStep,
+      setLoad: (load) => {
+        loads.push(load);
+        return quietStep();
+      },
+    };
+    const link = new UpscalerLink(
+      engine,
+      () => undefined,
+      () => now,
+      () => undefined
+    );
+    for (let i = 0; i < LINK_BREAKER.failures; i++) {
+      link.signal(lowGauge);
+      now += 10;
+    }
+    link.load('off');
+    expect(loads).toEqual(['off']);
+  });
+
+  it('trips even when other calls succeed between the failing ones', () => {
+    let now = 0;
+    let consumed = 0;
+    const engine: UpscalerEngine = {
+      define: () => [],
+      defineSounds: () => undefined,
+      consume: () => {
+        consumed += 1;
+        throw new Error('broken');
+      },
+      hint: quietStep,
+      wake: quietStep,
+      setLoad: quietStep,
+    };
+    const link = new UpscalerLink(
+      engine,
+      () => undefined,
+      () => now,
+      () => undefined
+    );
+    const hint: Hint = {
+      voice: 'v',
+      field: 'hardness',
+      questionId: 'hardness',
+      value: 0.5,
+      confidence: 0.9,
+      latencyMs: 5,
+    };
+    for (let i = 0; i < LINK_BREAKER.failures + 3; i++) {
+      link.signal(lowGauge);
+      link.hint(hint);
+      now += 10;
+    }
+    expect(consumed).toBe(LINK_BREAKER.failures);
+  });
+});
+
+describe('upscaler load, review fixes', () => {
+  it('holds a stream again when the layer comes back on', () => {
+    const e = run();
+    e.consume(rough, at(0));
+    e.setLoad('off', 10);
+    e.setLoad('full', 20);
+    const next = e.consume({ ...rough, phase: 'update', value: 0.5 }, at(30));
+    expect(next.commands.map((c) => c.op)).toContain('hold');
+  });
+
+  it('skips re-making a sounded moment when a hint arrives', () => {
+    const e = run();
+    e.defineSounds({ hiss: HISS });
+    e.consume(hit({ chain: { id: 'swing', step: 'resolve' } }), at(0));
+    const step = e.hint(
+      {
+        voice: 'swing',
+        field: 'hardness',
+      questionId: 'hardness',
+        value: 1,
+        confidence: 0.9,
+        latencyMs: 5,
+      },
+      10
+    );
+    expect(step.commands).toEqual([]);
+  });
+});

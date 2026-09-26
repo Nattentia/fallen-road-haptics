@@ -54,7 +54,7 @@ export class UpscalerLink {
    * Runs an engine call so that nothing it throws reaches the game, and the
    * paired base vibration still plays (fallback: base only).
    */
-  private guarded(call: () => UpscalerStep): UpscalerStep {
+  private guarded(call: () => UpscalerStep, main = false): UpscalerStep {
     const now = this.now();
     if (
       this.trippedAt !== null &&
@@ -63,8 +63,12 @@ export class UpscalerLink {
       return BASE_ONLY;
     try {
       const step = call();
-      this.failures = 0;
-      this.trippedAt = null;
+      // Only the main path (signals) proves the engine works again; a quiet
+      // wake or hint succeeding in between must not hide failing signals.
+      if (main) {
+        this.failures = 0;
+        this.trippedAt = null;
+      }
       return step;
     } catch (error) {
       this.report(`engine failed: ${String(error)}`);
@@ -82,10 +86,15 @@ export class UpscalerLink {
   /** Sheds or restores work, e.g. when the device heats up. */
   load(load: UpscalerLoad): void {
     this.report(`load ${load}`);
-    this.deliver(
-      this.guarded(() => this.engine.setLoad(load, this.now())),
-      null
-    );
+    // Past the breaker: the device's state must reach the engine even while
+    // it is set aside, or it would run at full load once it comes back.
+    let step = BASE_ONLY;
+    try {
+      step = this.engine.setLoad(load, this.now());
+    } catch (error) {
+      this.report(`load change failed: ${String(error)}`);
+    }
+    this.deliver(step, null);
   }
 
   define(bases: readonly BaseVibration[]): void {
@@ -139,12 +148,14 @@ export class UpscalerLink {
 
   private run(signal: Signal, base: string | null): void {
     const now = this.now();
-    const step = this.guarded(() =>
-      this.engine.consume(signal, {
-        now,
-        gameToJs: now - signal.t,
-        paired: base !== null,
-      })
+    const step = this.guarded(
+      () =>
+        this.engine.consume(signal, {
+          now,
+          gameToJs: now - signal.t,
+          paired: base !== null,
+        }),
+      true
     );
     this.deliver(step, base);
   }

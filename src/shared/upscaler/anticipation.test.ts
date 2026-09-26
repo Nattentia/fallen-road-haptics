@@ -139,4 +139,54 @@ describe('anticipation in the upscaler (6-2)', () => {
     const woken = e.wake(1000 - ANTICIPATION.restMs);
     expect(woken.commands).toEqual([]);
   });
+
+  it('replaces the tension when the moment is announced again', () => {
+    const e = run();
+    e.consume(expectAt(1000, 0.9), at(0));
+    const again = e.consume(expectAt(900, 0.9), at(200));
+    const mine = onVoice(again.commands, 'attack-1');
+    expect(mine[0]).toMatchObject({ op: 'revise', from: 200 });
+    expect(mine.filter((c) => c.op === 'play')).toHaveLength(0);
+  });
+
+  it('treats any moment on the action as the result: tension stops, no rest after it', () => {
+    const e = run();
+    e.consume(lighter(), at(700));
+    e.consume(expectAt(1000, 0.9), at(690));
+    const step = e.consume(
+      moment({ chain: { id: 'attack-1', step: 'progress' } }),
+      at(850)
+    );
+    expect(onVoice(step.commands, 'attack-1')[0]).toMatchObject({
+      op: 'revise',
+      from: 850,
+    });
+    expect(e.wake(1000 - ANTICIPATION.restMs).commands).toEqual([]);
+  });
+
+  it('lets lighter voices come back after the rest', () => {
+    const e = run();
+    e.consume(lighter(), at(700));
+    e.consume(expectAt(1000, 0.9), at(690));
+    const woken = e.wake(1000 - ANTICIPATION.restMs);
+    const others = woken.commands.filter(
+      (c) => 'voice' in c && c.voice !== 'attack-1'
+    );
+    const after = others.flatMap((c) =>
+      c.op === 'play' || c.op === 'revise'
+        ? c.score.events
+            .filter((ev) => c.score.at + ev.t >= 1000)
+            .map((ev) => ev.intensity)
+        : []
+    );
+    const during = others.flatMap((c) =>
+      c.op === 'play' || c.op === 'revise'
+        ? c.score.events
+            .filter((ev) => c.score.at + ev.t < 1000)
+            .map((ev) => ev.intensity)
+        : []
+    );
+    expect(after.length).toBeGreaterThan(0);
+    expect(Math.max(...after)).toBeGreaterThan(Math.max(...during));
+  });
 });

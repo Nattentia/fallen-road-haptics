@@ -7,6 +7,7 @@ import {
   mergeToAhap,
   scaleScore,
   toAhap,
+  truncateScore,
   validateAhap,
 } from './score';
 
@@ -217,5 +218,43 @@ describe('clipping and windows', () => {
     const whole = windowEnergy(s, 0, 10_000);
     expect(whole).toBeCloseTo(energyOf(s));
     expect(windowEnergy(s, 1000, 1030)).toBeLessThan(whole);
+  });
+});
+
+describe('truncating a score (review fix)', () => {
+  const body: Score = {
+    id: 'b',
+    at: 1000,
+    layer: 'upscale',
+    source: { kind: 'rule' },
+    events: [
+      { kind: 'continuous', t: 0, duration: 100, intensity: 0.8, sharpness: 0.3 },
+    ],
+    curves: [
+      {
+        control: 'intensity',
+        points: [
+          { t: 0, value: 1 },
+          { t: 25, value: 0.55 },
+          { t: 100, value: 0 },
+        ],
+      },
+    ],
+  };
+
+  it('ends a cut curve at the value it had there', () => {
+    const cut = truncateScore(body, 1060);
+    const points = cut.curves[0]!.points;
+    expect(points.at(-1)!.t).toBe(60);
+    expect(points.at(-1)!.value).toBeCloseTo(curveValueAt(body.curves[0]!.points, 60, 1));
+    expect(cut.events[0]).toMatchObject({ duration: 60 });
+  });
+
+  it('keeps a curve cut before its second point', () => {
+    const cut = truncateScore(body, 1010);
+    expect(cut.curves[0]!.points).toHaveLength(2);
+    expect(cut.curves[0]!.points[1]!.value).toBeCloseTo(
+      curveValueAt(body.curves[0]!.points, 10, 1)
+    );
   });
 });

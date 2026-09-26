@@ -165,6 +165,37 @@ export const clipScore = (s: Score, from: number, id: string): Score => {
   return { ...s, id, at: s.at + cut, events, curves };
 };
 
+/**
+ * What is left of a score before absolute time `until`: later events go, a
+ * continuous event under way is shortened, and curves end at the value they
+ * had there.
+ */
+export const truncateScore = (s: Score, until: number): Score => {
+  const cut = until - s.at;
+  const events: ScoreEvent[] = [];
+  for (const e of s.events) {
+    if (e.t >= cut) continue;
+    events.push(
+      e.kind === 'continuous'
+        ? { ...e, duration: Math.min(e.duration, cut - e.t) }
+        : e
+    );
+  }
+  const curves = s.curves.flatMap((c) => {
+    if (c.points.every((p) => p.t <= cut)) return [c];
+    const neutral = c.control === 'intensity' ? 1 : 0;
+    const earlier = c.points.filter((p) => p.t < cut);
+    if (earlier.length === 0) return [];
+    return [
+      {
+        ...c,
+        points: [...earlier, { t: cut, value: curveValueAt(c.points, cut, neutral) }],
+      },
+    ];
+  });
+  return { ...s, events, curves };
+};
+
 // ---------------------------------------------------------------------------
 // AHAP
 // ---------------------------------------------------------------------------

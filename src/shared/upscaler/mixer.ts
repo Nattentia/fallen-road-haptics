@@ -5,7 +5,13 @@ import {
   type Command,
   type Score,
 } from './contract';
-import { clipScore, endOf, levelAt, windowEnergy } from './score';
+import {
+  clipScore,
+  endOf,
+  levelAt,
+  truncateScore,
+  windowEnergy,
+} from './score';
 
 /**
  * Keeps the whole mix in balance (v4 5.2) and applies the overlap policy
@@ -181,7 +187,8 @@ export class Mixer {
     voice: string,
     importance: number,
     from: number,
-    gain: number = MIX.duckGain
+    gain: number = MIX.duckGain,
+    until?: number
   ): Command[] {
     this.prune(from);
     const out: Command[] = [];
@@ -194,15 +201,18 @@ export class Mixer {
     for (const v of ducked) {
       const remainders = this.active
         .filter((a) => a.voice === v)
-        .map((a) => {
+        .flatMap((a) => {
           this.seq += 1;
-          return {
-            ...a,
-            score: scaleAll(
-              clipScore(a.score, from, `duck#${this.seq}`),
-              gain
-            ),
-          };
+          const rest = clipScore(a.score, from, `duck#${this.seq}`);
+          if (until === undefined)
+            return [{ ...a, score: scaleAll(rest, gain), importance: 0 }];
+          // A ducking with an end: lowered until then, as it was after it,
+          // keeping its importance so later moments weigh it as before.
+          this.seq += 1;
+          return [
+            { ...a, score: scaleAll(truncateScore(rest, until), gain) },
+            { ...a, score: clipScore(a.score, until, `duck#${this.seq}`) },
+          ];
         })
         .filter((a) => a.score.events.length > 0);
       this.active = this.active.filter((a) => a.voice !== v);
@@ -210,8 +220,9 @@ export class Mixer {
       if (!first) continue;
       out.push({ op: 'revise', voice: v, from, score: first.score });
       for (const r of rest) out.push({ op: 'play', voice: v, score: r.score });
-      // Ducked voices stay ducked; they no longer compete for importance.
-      this.active.push(...remainders.map((r) => ({ ...r, importance: 0 })));
+      // Ducked voices stay ducked and no longer compete for importance,
+      // unless the ducking had an end.
+      this.active.push(...remainders);
     }
     return out;
   }
