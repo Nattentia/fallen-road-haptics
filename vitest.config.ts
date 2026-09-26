@@ -4,8 +4,7 @@ export default defineConfig({
   test: {
     include: [
       'src/shared/**/*.test.ts',
-      'src/client/haptics/**/*.test.ts',
-      'src/client/lab/**/*.test.ts',
+      'src/client/**/*.test.ts',
       'tools/**/*.test.mjs',
     ],
     environment: 'node',

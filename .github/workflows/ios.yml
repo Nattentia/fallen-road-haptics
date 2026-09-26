@@ -23,6 +23,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Type check, lint and every TypeScript test (upscaler body, adapter, Lab).
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run type-check
+      - run: npm run lint
+      - run: npm test
+
   # Upscaler player logic tests on the simulator. The IPA is only built and
   # published when they pass.
   test:
@@ -44,7 +59,7 @@ jobs:
           xcodebuild test -project FallenRoadHaptics.xcodeproj -scheme FallenRoadHapticsTests -destination "platform=iOS Simulator,name=$device" CODE_SIGNING_ALLOWED=NO | tail -n 80
 
   build:
-    needs: test
+    needs: [web, test]
     runs-on: macos-15
     timeout-minutes: 60
     steps:
