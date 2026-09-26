@@ -8,7 +8,9 @@ export type { Texture } from './phrase';
  * Texture of a phrase (v5 3.2): the sound played with a moment, turned
  * straight into vibration numbers. No judgement of what the object is.
  * - onset brightness → tap sharpness; mean brightness → body sharpness;
- * - length → body length; noisiness → grain; loudness envelope → body shape.
+ * - decay (else length) → body length; noisiness, high band → grain;
+ * - slow attack → softer tap, fuller body (a push); low band → thicker,
+ *   duller body; loudness envelope → body shape.
  * Order, field by field: the game's material, then the sound, then the rule.
  * The skeleton and the size order never depend on the sound.
  */
@@ -23,6 +25,15 @@ export const SOUND_TEXTURE = {
   noisyAt: 0.25,
   /** Points kept from the loudness envelope for the body curve. */
   curvePoints: 6,
+  /** Decays this short or shorter get the shortest body (hits: 25–130 ms). */
+  decayShortMs: 20,
+  decayLongMs: 140,
+  /** Attacks this slow or slower push fully (hits: 5–25 ms). */
+  attackSnapMs: 5,
+  attackPushMs: 30,
+  /** High-band share where grain starts, and where it is full. */
+  hissFrom: 0.3,
+  hissFull: 0.8,
 };
 
 const clamp = (x: number): number =>
@@ -34,6 +45,8 @@ export const textureOfMaterial = (m: Material): Texture => ({
   bodySharpness: clamp(0.5 - 0.4 * m.weight),
   bodyScale: 0.6 + 0.8 * clamp(m.weight),
   grain: clamp(m.roughness),
+  tapScale: 1,
+  bodyLevelScale: 1,
 });
 
 const usable = (f: SoundFeatures | undefined): f is SoundFeatures =>
@@ -44,13 +57,26 @@ export const textureOfSound = (f: SoundFeatures): Texture => {
     f.brightness.reduce((s, p) => s + p.value, 0) /
     Math.max(1, f.brightness.length);
   const onset = f.brightness[0]?.value ?? mean;
-  const span = SOUND_TEXTURE.longMs - SOUND_TEXTURE.shortMs;
-  const length = clamp((f.durationMs - SOUND_TEXTURE.shortMs) / span);
+  const T = SOUND_TEXTURE;
+  const length =
+    f.decayMs !== undefined
+      ? clamp((f.decayMs - T.decayShortMs) / (T.decayLongMs - T.decayShortMs))
+      : clamp((f.durationMs - T.shortMs) / (T.longMs - T.shortMs));
+  const push =
+    f.attackMs !== undefined
+      ? clamp((f.attackMs - T.attackSnapMs) / (T.attackPushMs - T.attackSnapMs))
+      : 0;
+  const low = clamp(f.bands?.low ?? 0);
+  const hiss = clamp(
+    ((f.bands?.high ?? 0) - T.hissFrom) / (T.hissFull - T.hissFrom)
+  );
   return {
     tapSharpness: clamp(0.35 + 0.6 * onset),
-    bodySharpness: clamp(0.1 + 0.4 * mean),
+    bodySharpness: clamp((0.1 + 0.4 * mean) * (1 - 0.4 * low)),
     bodyScale: 0.6 + 0.8 * length,
-    grain: clamp(f.noisiness / SOUND_TEXTURE.noisyAt),
+    grain: Math.max(clamp(f.noisiness / T.noisyAt), hiss),
+    tapScale: 1 - 0.3 * push,
+    bodyLevelScale: 1 + 0.4 * push + 0.2 * low,
     bodyCurve: curveOf(f),
   };
 };
@@ -94,6 +120,8 @@ export const resolveTexture = (
       bodySharpness: weightGiven ? rule.bodySharpness : heard.bodySharpness,
       bodyScale: weightGiven ? rule.bodyScale : heard.bodyScale,
       grain: fromGame?.roughness !== undefined ? rule.grain : heard.grain,
+      tapScale: heard.tapScale,
+      bodyLevelScale: weightGiven ? rule.bodyLevelScale : heard.bodyLevelScale,
       ...(heard.bodyCurve ? { bodyCurve: heard.bodyCurve } : {}),
     },
     fromSound: true,

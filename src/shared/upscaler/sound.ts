@@ -7,6 +7,8 @@ import type { CurvePoint, SoundFeatures } from './contract';
  *   the source of sharpness trajectories;
  * - noisiness: spectral flatness weighted by loudness, the source of grain
  *   density (a pure tone is 0, white noise is near 1).
+ * - attack, decay (to −20 dB) and energy bands (v5 A): what tells a quick
+ *   knock from a push, a long ring or a hiss.
  * Runs once per sound at load time; works on raw samples, so any decoder
  * (Web Audio in the game, ffmpeg in tests) can feed it.
  */
@@ -22,6 +24,12 @@ export const SOUND = {
   /** Band for noisiness (spectral flatness). */
   flatLowHz: 100,
   flatHighHz: 8000,
+  /** Band edges for the energy shares: low < lowHz ≤ mid < midHz; high ≥ highHz. */
+  lowHz: 150,
+  midHz: 1000,
+  highHz: 3000,
+  /** Decay is measured to this far below the peak (dB). */
+  decayDb: -20,
 };
 
 const clamp01 = (x: number): number =>
@@ -63,7 +71,17 @@ const fft = (re: Float64Array, im: Float64Array): void => {
   }
 };
 
-type Frame = { t: number; rms: number; centroidHz: number; flatness: number };
+type Frame = {
+  t: number;
+  rms: number;
+  centroidHz: number;
+  flatness: number;
+  /** Band powers and total power of the frame. */
+  low: number;
+  mid: number;
+  high: number;
+  power: number;
+};
 
 const frames = (samples: Float32Array, sampleRate: number): Frame[] => {
   const hop = Math.max(1, Math.round((sampleRate * SOUND.hopMs) / 1000));
@@ -92,6 +110,10 @@ const frames = (samples: Float32Array, sampleRate: number): Frame[] => {
     let bandPower = 0;
     let logSum = 0;
     let bandBins = 0;
+    let low = 0;
+    let mid = 0;
+    let high = 0;
+    let power = 0;
     const bins = size / 2;
     for (let k = 1; k < bins; k++) {
       const hz = (k * sampleRate) / size;
@@ -99,6 +121,10 @@ const frames = (samples: Float32Array, sampleRate: number): Frame[] => {
       const m = Math.sqrt(p);
       magnitude += m;
       weighted += m * hz;
+      power += p;
+      if (hz < SOUND.lowHz) low += p;
+      else if (hz < SOUND.midHz) mid += p;
+      else if (hz >= SOUND.highHz) high += p;
       if (hz >= SOUND.flatLowHz && hz <= SOUND.flatHighHz) {
         bandPower += p;
         logSum += Math.log(p);
@@ -111,6 +137,10 @@ const frames = (samples: Float32Array, sampleRate: number): Frame[] => {
       centroidHz: magnitude > 0 ? weighted / magnitude : 0,
       flatness:
         bandBins > 0 ? Math.exp(logSum / bandBins) / (bandPower / bandBins) : 0,
+      low,
+      mid,
+      high,
+      power,
     });
   }
   return out;
@@ -156,10 +186,24 @@ export const analyzeSound = (
     weight > 0
       ? shifted.reduce((s, f) => s + f.rms * f.flatness, 0) / weight
       : 0;
+  const top = shifted.reduce((best, f, i) => (f.rms > shifted[best]!.rms ? i : best), 0);
+  const quiet = peak * 10 ** (SOUND.decayDb / 20);
+  const after = shifted.findIndex((f, i) => i > top && f.rms < quiet);
+  const end = after >= 0 ? shifted[after]!.t : shifted.at(-1)!.t + SOUND.hopMs;
+  const total = shifted.reduce((s, f) => s + f.power, 0);
+  const share = (band: (f: Frame) => number) =>
+    total > 0 ? clamp01(shifted.reduce((s, f) => s + band(f), 0) / total) : 0;
   return {
     durationMs: Math.round(shifted.at(-1)!.t + SOUND.hopMs),
     loudness: thin(shifted, (f) => f.rms / peak),
     brightness: thin(shifted, (f) => brightnessOf(f.centroidHz)),
     noisiness: clamp01(noisiness),
+    attackMs: Math.round(shifted[top]!.t),
+    decayMs: Math.round(end - shifted[top]!.t),
+    bands: {
+      low: share((f) => f.low),
+      mid: share((f) => f.mid),
+      high: share((f) => f.high),
+    },
   };
 };

@@ -40,6 +40,10 @@ export type Texture = {
   bodyScale: number;
   /** 0..1; above 0.4 a landed hit scatters grains. */
   grain: number;
+  /** Tap strength factor, 0.7..1: a slow attack softens the tap… */
+  tapScale: number;
+  /** …and a slow attack or a bassy sound fills the body: 1..1.6. */
+  bodyLevelScale: number;
   /** Shape of the ringing body: `at` is a fraction of its length. */
   bodyCurve?: readonly { at: number; value: number }[] | undefined;
 };
@@ -74,9 +78,9 @@ export const PHRASE_FLOOR = { importance: 0.15, magnitude: 0.05 };
 const sizing = (m: number, texture: Texture, decoration: Decoration) => {
   const tail = 1 - 0.3 * decoration.instability;
   return {
-    tap: 0.45 + 0.55 * m,
+    tap: (0.45 + 0.55 * m) * texture.tapScale,
     body: (30 + 170 * m) * texture.bodyScale * tail,
-    bodyLevel: 0.3 + 0.4 * m,
+    bodyLevel: clamp((0.3 + 0.4 * m) * texture.bodyLevelScale),
     bodySharp: clamp(texture.bodySharpness),
     bodyCurve: texture.bodyCurve,
     tapSharp: clamp(texture.tapSharpness + 0.1 * decoration.advantage),

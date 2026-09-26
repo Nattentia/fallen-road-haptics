@@ -68,18 +68,52 @@ const asScore = (s: Shape): Score => ({
 
 const randomTextures = (n: number): Texture[] => {
   const r = seeded(11);
-  return Array.from({ length: n }, () =>
-    textureOfSound(sound(r(), 20 + 900 * r(), r() * 0.5, r()))
-  );
+  return Array.from({ length: n }, () => {
+    const low = r();
+    const mid = (1 - low) * r();
+    return textureOfSound({
+      ...sound(r(), 20 + 900 * r(), r() * 0.5, r()),
+      attackMs: 60 * r(),
+      decayMs: 300 * r(),
+      bands: { low, mid, high: (1 - low - mid) * r() },
+    });
+  });
 };
 
 describe('texture from sound (v5 3.2)', () => {
+  it('turns slow attacks into a push, long decays into long bodies, bass into thickness (v5 A)', () => {
+    const base = sound(0.3, 300, 0);
+    const snap = textureOfSound({ ...base, attackMs: 0, decayMs: 30 });
+    const push = textureOfSound({ ...base, attackMs: 30, decayMs: 30 });
+    expect(push.tapScale).toBeLessThan(snap.tapScale);
+    expect(push.bodyLevelScale).toBeGreaterThan(snap.bodyLevelScale);
+    const ring = textureOfSound({ ...base, attackMs: 0, decayMs: 130 });
+    expect(ring.bodyScale).toBeGreaterThan(snap.bodyScale);
+    const thin = textureOfSound({
+      ...base,
+      bands: { low: 0, mid: 0.9, high: 0 },
+    });
+    const thick = textureOfSound({
+      ...base,
+      bands: { low: 0.9, mid: 0.1, high: 0 },
+    });
+    expect(thick.bodySharpness).toBeLessThan(thin.bodySharpness);
+    expect(thick.bodyLevelScale).toBeGreaterThan(thin.bodyLevelScale);
+    const hiss = textureOfSound({
+      ...base,
+      bands: { low: 0, mid: 0.1, high: 0.8 },
+    });
+    expect(hiss.grain).toBeGreaterThan(0.4);
+  });
+
   it('reproduces the v4 numbers when only material is known', () => {
     const t = textureOfMaterial({ hardness: 1, weight: 0, roughness: 0.7 });
     expect(t.tapSharpness).toBeCloseTo(0.95);
     expect(t.bodyScale).toBeCloseTo(0.6);
     expect(t.bodySharpness).toBeCloseTo(0.5);
     expect(t.grain).toBeCloseTo(0.7);
+    expect(t.tapScale).toBe(1);
+    expect(t.bodyLevelScale).toBe(1);
     expect(t.bodyCurve).toBeUndefined();
   });
 
@@ -89,6 +123,10 @@ describe('texture from sound (v5 3.2)', () => {
         expect(x >= 0 && x <= 1).toBe(true);
       expect(t.bodyScale).toBeGreaterThanOrEqual(0.6);
       expect(t.bodyScale).toBeLessThanOrEqual(1.4);
+      expect(t.tapScale).toBeGreaterThanOrEqual(0.7);
+      expect(t.tapScale).toBeLessThanOrEqual(1);
+      expect(t.bodyLevelScale).toBeGreaterThanOrEqual(1);
+      expect(t.bodyLevelScale).toBeLessThanOrEqual(1.6);
       for (const p of t.bodyCurve ?? []) {
         expect(p.at >= 0 && p.at <= 1).toBe(true);
         expect(p.value >= 0 && p.value <= 1).toBe(true);

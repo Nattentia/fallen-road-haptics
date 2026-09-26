@@ -19,7 +19,38 @@ const noise = (ms = 300) => {
   return make(ms, () => (r() * 2 - 1) * 0.5);
 };
 
+/** Rises linearly over `riseMs`, then decays at `decay` per second. */
+const shaped = (hz: number, riseMs: number, decay: number, ms = 600) =>
+  make(ms, (t) => {
+    const rise = Math.min(1, (t * 1000) / Math.max(1, riseMs));
+    const fall = Math.exp(-decay * Math.max(0, t - riseMs / 1000));
+    return Math.sin(2 * Math.PI * hz * t) * rise * fall * 0.5;
+  });
+
 describe('sound analysis', () => {
+  it('measures attack and decay (v5 A)', () => {
+    const snap = analyzeSound(shaped(500, 0, 60), RATE);
+    const push = analyzeSound(shaped(500, 40, 60), RATE);
+    expect(snap.attackMs).toBeLessThanOrEqual(10);
+    expect(push.attackMs).toBeGreaterThanOrEqual(30);
+    const short = analyzeSound(shaped(500, 0, 60), RATE);
+    const long = analyzeSound(shaped(500, 0, 12), RATE);
+    // −20 dB at 60/s is about 38 ms; at 12/s about 190 ms.
+    expect(short.decayMs).toBeLessThan(70);
+    expect(long.decayMs).toBeGreaterThan(150);
+  });
+
+  it('splits energy into low, mid and high bands (v5 A)', () => {
+    const low = analyzeSound(sine(80), RATE).bands!;
+    const mid = analyzeSound(sine(400), RATE).bands!;
+    const high = analyzeSound(sine(6000), RATE).bands!;
+    expect(low.low).toBeGreaterThan(0.7);
+    expect(mid.mid).toBeGreaterThan(0.7);
+    expect(high.high).toBeGreaterThan(0.7);
+    for (const b of [low, mid, high])
+      expect(b.low + b.mid + b.high).toBeLessThanOrEqual(1.0001);
+  });
+
   it('tells a pure tone from noise', () => {
     expect(analyzeSound(sine(440), RATE).noisiness).toBeLessThan(0.1);
     expect(analyzeSound(noise(), RATE).noisiness).toBeGreaterThan(0.5);

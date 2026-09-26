@@ -167,6 +167,12 @@ export type SoundFeatures = {
   loudness: CurvePoint[];
   /** How noise-like the sound is overall, the source of grain density. */
   noisiness: number;
+  /** Start of the sound to its loudest moment (v5 A): a slow one pushes. */
+  attackMs?: number;
+  /** Loudest moment to 20 dB below it (v5 A): how long it rings. */
+  decayMs?: number;
+  /** Shares of the sound's energy below 150 Hz, 150–1000 Hz, above 3 kHz. */
+  bands?: { low: number; mid: number; high: number };
 };
 
 // ---------------------------------------------------------------------------
