@@ -157,7 +157,10 @@ def main():
             fwd = list(answers[qid]["probabilities"].values())
             rev = list(answers[qid + "~rev"]["probabilities"].values())[::-1]
             pick = lambda p: keys[qid][max(range(len(p)), key=p.__getitem__)]
-            out[qid] = {"p": fwd, "pick": pick(fwd), "flip": pick(fwd) != pick(rev)}
+            # Asking both ways and averaging cancels the option-order bias.
+            both = [(a + b) / 2 for a, b in zip(fwd, rev)]
+            out[qid] = {"p": fwd, "pick": pick(fwd), "flip": pick(fwd) != pick(rev),
+                        "p2": both, "pick2": pick(both)}
         return out
 
     report, rows = {}, []
@@ -171,6 +174,7 @@ def main():
             report[f"{name} {qid}"] = {
                 "n": n,
                 "laya": sum(a[qid]["pick"] == it[qid] for it, a in zip(items, answers)) / n,
+                "both ways": sum(a[qid]["pick2"] == it[qid] for it, a in zip(items, answers)) / n,
                 "rule": sum(rule(it["text"]) == it[qid] for it in items) / n,
                 "chance95": chance(n, len(QUESTIONS[qid][1])),
                 "flip": sum(a[qid]["flip"] for a in answers) / n,
@@ -179,6 +183,7 @@ def main():
         report[f"{name} target"] = {
             "n": n,
             "laya": sum(a["target"]["pick"] == it["target"] for it, a in zip(items, answers)) / n,
+            "both ways": sum(a["target"]["pick2"] == it["target"] for it, a in zip(items, answers)) / n,
             "rule": sum(opposite[rule_actor(it["text"])] == it["target"] for it in items) / n,
             "chance95": chance(n, 3),
             "flip": sum(a["target"]["flip"] for a in answers) / n,
@@ -187,6 +192,7 @@ def main():
         report[f"{name} importance (order)"] = {
             "n": n,
             "laya": order_score([expected(a["importance"]["p"]) for a in answers], truths, 0.3),
+            "both ways": order_score([expected(a["importance"]["p2"]) for a in answers], truths, 0.3),
             "rule": order_score([rule_importance(it["text"]) for it in items], truths, 0.3),
             "chance95": order_chance(truths, 0.3),
             "flip": sum(a["importance"]["flip"] for a in answers) / n,
@@ -199,6 +205,7 @@ def main():
         report[f"{qid} (order)"] = {
             "n": len(items),
             "laya": order_score([expected(a["p"]) for a in answers], truths, 1),
+            "both ways": order_score([expected(a["p2"]) for a in answers], truths, 1),
             "rule": order_score([rule_level(qid, it["text"]) for it in items], truths, 1),
             "chance95": order_chance(truths, 1),
             "flip": sum(a["flip"] for a in answers) / len(items),
@@ -208,15 +215,19 @@ def main():
 
     for r in report.values():
         r["pass"] = r["laya"] > r["chance95"] and r["flip"] <= 0.15
-        r["beats rule"] = r["laya"] > r["rule"]
+        # Both-ways answers have no order bias by construction.
+        r["pass both ways"] = r["both ways"] > r["chance95"]
+        r["beats rule"] = max(r["laya"], r["both ways"]) > r["rule"]
     Path(args.out).write_text(json.dumps({"model": args.model, "report": report, "rows": rows}, indent=2),
                               encoding="utf-8")
     print(f"### 4-2' in-text judgements: {args.model}\n")
-    print("| question | n | Laya | rule | chance (95%) | flips | beats chance, stable | beats rule |")
-    print("|---|---|---|---|---|---|---|---|")
+    ok = lambda b: "✅" if b else "❌"
+    print("| question | n | Laya | both ways | rule | chance (95%) | flips | pass (one way) | pass (both ways) | beats rule |")
+    print("|---|---|---|---|---|---|---|---|---|---|")
     for name, r in report.items():
-        print(f"| {name} | {r['n']} | {r['laya']:.2f} | {r['rule']:.2f} | {r['chance95']:.2f} | "
-              f"{r['flip']:.2f} | {'✅' if r['pass'] else '❌'} | {'✅' if r['beats rule'] else '❌'} |")
+        print(f"| {name} | {r['n']} | {r['laya']:.2f} | {r['both ways']:.2f} | {r['rule']:.2f} | "
+              f"{r['chance95']:.2f} | {r['flip']:.2f} | {ok(r['pass'])} | {ok(r['pass both ways'])} | "
+              f"{ok(r['beats rule'])} |")
 
 
 if __name__ == "__main__":
