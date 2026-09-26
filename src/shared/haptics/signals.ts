@@ -14,11 +14,20 @@
  * reshape it as the action unfolds, instead of starting a new one per signal.
  */
 
-export type Party = 'self' | 'other' | 'world';
-export type Valence = 'good' | 'bad' | 'neutral';
+export const PARTIES = ['self', 'other', 'world'] as const;
+export type Party = (typeof PARTIES)[number];
+export const VALENCES = ['good', 'bad', 'neutral'] as const;
+export type Valence = (typeof VALENCES)[number];
 /** How a contact ended. Games know this exactly, so it is never inferred. */
-export type Outcome =
-  'landed' | 'blocked' | 'deflected' | 'missed' | 'broke' | 'none';
+export const OUTCOMES = [
+  'landed',
+  'blocked',
+  'deflected',
+  'missed',
+  'broke',
+  'none',
+] as const;
+export type Outcome = (typeof OUTCOMES)[number];
 export type ChainStep = 'start' | 'progress' | 'resolve' | 'end' | 'cancel';
 export type ChainRef = { id: string; step: ChainStep };
 
@@ -196,6 +205,17 @@ export const levelOf = (x: number): Level => {
   return v < 1 / 3 ? 'low' : v < 2 / 3 ? 'medium' : 'high';
 };
 
+const phrase = {
+  description: (d: string) => `${d}.`,
+  result: (o: Outcome) => `result: ${o}.`,
+  size: (l: Level) => `size: ${l}.`,
+  intensity: (l: Level) => `intensity: ${l}.`,
+  by: (p: Party) => `by: ${p}.`,
+  to: (p: Party) => `to: ${p}.`,
+  forPlayer: (v: Valence) => `for player: ${v}.`,
+  gauge: (d: string, l: Level) => `${d}: ${l}.`,
+};
+
 /**
  * The live state as short phrases, one fact each. Values are binned so the
  * phrase set is finite: every phrase can be tokenized ahead of time and the
@@ -206,19 +226,44 @@ export const statePhrases = (
   gauges: ReadonlyArray<{ description: string; value: number }> = []
 ): string[] => {
   const phrases: string[] = [];
-  if (signal.description) phrases.push(`${signal.description}.`);
+  if (signal.description) phrases.push(phrase.description(signal.description));
   if (signal.kind === 'event') {
     phrases.push(
-      `result: ${signal.outcome}.`,
-      `size: ${levelOf(signal.magnitude)}.`
+      phrase.result(signal.outcome),
+      phrase.size(levelOf(signal.magnitude))
     );
   } else {
-    phrases.push(`intensity: ${levelOf(signal.value)}.`);
+    phrases.push(phrase.intensity(levelOf(signal.value)));
   }
-  if (signal.actor) phrases.push(`by: ${signal.actor}.`);
-  if (signal.target) phrases.push(`to: ${signal.target}.`);
-  if (signal.valence) phrases.push(`for player: ${signal.valence}.`);
+  if (signal.actor) phrases.push(phrase.by(signal.actor));
+  if (signal.target) phrases.push(phrase.to(signal.target));
+  if (signal.valence) phrases.push(phrase.forPlayer(signal.valence));
   for (const g of gauges)
-    phrases.push(`${g.description}: ${levelOf(g.value)}.`);
+    phrases.push(phrase.gauge(g.description, levelOf(g.value)));
   return phrases;
+};
+
+/**
+ * Every phrase `statePhrases` can produce for a game that uses these
+ * descriptions and gauges. Each is tokenized ahead of time; the device joins
+ * their tokens instead of running a tokenizer.
+ */
+export const stateVocabulary = (
+  descriptions: readonly string[],
+  gaugeDescriptions: readonly string[]
+): string[] => {
+  const out = new Set<string>();
+  for (const d of descriptions) out.add(phrase.description(d));
+  for (const o of OUTCOMES) out.add(phrase.result(o));
+  for (const l of LEVELS) {
+    out.add(phrase.size(l));
+    out.add(phrase.intensity(l));
+    for (const g of gaugeDescriptions) out.add(phrase.gauge(g, l));
+  }
+  for (const p of PARTIES) {
+    out.add(phrase.by(p));
+    out.add(phrase.to(p));
+  }
+  for (const v of VALENCES) out.add(phrase.forPlayer(v));
+  return [...out].sort();
 };
