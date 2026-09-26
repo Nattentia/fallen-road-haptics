@@ -59,6 +59,7 @@ targets:
         type: folder
         buildPhase: resources
       - path: App/Sources/UpscalerContract.swift
+      - path: App/Sources/UpscalerPlayer.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.nattentia.fallenroadhaptics.tests

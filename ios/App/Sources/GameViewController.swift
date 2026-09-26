@@ -8,6 +8,14 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
     private var webView: WKWebView!
     private let haptics = HapticPlayer()
     private let log = LatencyLog()
+    private let recorder = UpscalerRecorder()
+    private lazy var backend = CoreHapticsBackend(jsNow: { [weak self] in
+        guard let self else { return .nan }
+        return self.log.toJs(Clock.nowMs())
+    })
+    private lazy var upscaler = UpscalerPlayer(backend: backend)
+    private static let gameURL = URL(string: "app://local/game.html?probe=1")!
+    private static let labURL = URL(string: "app://local/game.html?lab=1")!
     private let statsLabel = UILabel()
     private var statsTimer: Timer?
 
@@ -42,7 +50,11 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         webView.backgroundColor = .black
         webView.isInspectable = true
         view.addSubview(webView)
-        webView.load(URLRequest(url: URL(string: "app://local/game.html?probe=1")!))
+        webView.load(URLRequest(url: Self.gameURL))
+
+        backend.log = { NSLog("haptics: %@", $0) }
+        upscaler.log = { NSLog("upscaler: %@", $0) }
+        backend.onReset = { [weak self] in self?.upscaler.reset() }
 
         setUpOverlay()
         statsTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
@@ -89,7 +101,8 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
                 haptic: false, syncRtt: log.syncRtt
             ))
         case "signal":
-            // Upscaler input. Logged only until the upscaler consumes it.
+            // Upscaler input, kept whole for real-play fixtures.
+            recorder.add(body, receivedAt: log.toJs(received))
             let signal = body["signal"] as? [String: Any] ?? [:]
             let kind = signal["kind"] as? String ?? "?"
             let chain = signal["chain"] as? [String: Any]
@@ -113,9 +126,71 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
                 t2: log.toJs(received), t3: log.toJs(done),
                 haptic: issued, syncRtt: log.syncRtt
             ))
+        case "upscaler":
+            recorder.add(body, receivedAt: log.toJs(received))
+            let raw = body["commands"] as? [Any] ?? []
+            var ops: [String] = []
+            for item in raw {
+                do {
+                    let command = try UpscalerCommand.from(message: item)
+                    upscaler.apply(command)
+                    ops.append(command.op)
+                } catch {
+                    NSLog("upscaler: undecodable command \(error)")
+                }
+            }
+            let done = Clock.nowMs()
+            log.add(.init(
+                seq: seq, kind: "upscaler", detail: ops.joined(separator: "+"), speed: 0, t0: nil,
+                t1: (body["t1"] as? NSNumber)?.doubleValue ?? .nan,
+                t2: log.toJs(received), t3: log.toJs(done),
+                haptic: !ops.isEmpty, syncRtt: log.syncRtt
+            ))
+        case "labSet":
+            if let fade = (body["reviseFadeMs"] as? NSNumber)?.doubleValue { UpscalerPlayer.reviseFadeMs = fade }
+            if let loop = (body["holdLoopSeconds"] as? NSNumber)?.doubleValue { CoreHapticsBackend.holdSegmentSeconds = loop }
+        case "labProbe":
+            let name = body["probe"] as? String ?? ""
+            let result = backend.probe(name)
+            let json = (try? JSONSerialization.data(withJSONObject: result))
+                .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+            webView.evaluateJavaScript("window.__hsLabResult&&window.__hsLabResult(\(Self.quoted(name)),\(json))")
+        case "labSave":
+            let name = (body["name"] as? String ?? "lab").filter { $0.isLetter || $0.isNumber || $0 == "-" }
+            let text = body["json"] as? String ?? "{}"
+            let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("lab-\(name)-\(Self.stamp()).json")
+            do {
+                try text.write(to: url, atomically: true, encoding: .utf8)
+                share([url])
+            } catch {
+                NSLog("lab save failed: \(error)")
+            }
+        case "labExit":
+            UpscalerPlayer.reviseFadeMs = 8
+            CoreHapticsBackend.holdSegmentSeconds = 30
+            webView.load(URLRequest(url: Self.gameURL))
         default:
             break
         }
+    }
+
+    private static func quoted(_ s: String) -> String {
+        let data = (try? JSONSerialization.data(withJSONObject: [s])) ?? Data("[\"\"]".utf8)
+        let array = String(data: data, encoding: .utf8) ?? "[\"\"]"
+        return String(array.dropFirst().dropLast())
+    }
+
+    private static func stamp() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd-HHmmss"
+        return formatter.string(from: Date())
+    }
+
+    private func share(_ urls: [URL]) {
+        let sheet = UIActivityViewController(activityItems: urls, applicationActivities: nil)
+        sheet.popoverPresentationController?.sourceView = view
+        present(sheet, animated: true)
     }
 
     // MARK: - Overlay
@@ -131,6 +206,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
             makeButton("햅틱", #selector(toggleHaptics)),
             makeButton("기록 저장", #selector(exportLog)),
             makeButton("Lab", #selector(openLab)),
+            makeButton("업스케일 Lab", #selector(openUpscalerLab)),
         ])
         buttons.axis = .horizontal
         buttons.spacing = 6
@@ -164,13 +240,16 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
 
     @objc private func exportLog() {
         do {
-            let url = try log.writeCsv()
-            let sheet = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-            sheet.popoverPresentationController?.sourceView = view
-            present(sheet, animated: true)
+            var urls = [try log.writeCsv()]
+            if !recorder.isEmpty { urls.append(try recorder.write(stamp: Self.stamp())) }
+            share(urls)
         } catch {
             NSLog("export failed: \(error)")
         }
+    }
+
+    @objc private func openUpscalerLab() {
+        webView.load(URLRequest(url: Self.labURL))
     }
 
     @objc private func openLab() {
