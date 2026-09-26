@@ -31,6 +31,11 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  // The upscaler Lab (opened from the iOS app) replaces the game page.
+  if (new URLSearchParams(window.location.search).has('lab')) {
+    void import('./lab/lab').then((lab) => lab.mountLab());
+    return;
+  }
   const game = new Game(config);
   // Debug handle for local preview tooling (synthetic DOM events don't reach
   // Phaser's input manager reliably); harmless in the Reddit webview.
