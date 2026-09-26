@@ -17,6 +17,12 @@ export const PART_LIMITS = {
   maxGrains: 24,
   /** A curve returns to neutral this long after the event it shapes. */
   neutralGapMs: 1,
+  /**
+   * A body curve from a sound starts this long after the tap: the intensity
+   * curve scales every event in the pattern, the tap included, so the tap
+   * must sit under a full-strength curve (score.ts TRANSIENT_EQUIV_MS).
+   */
+  tapClearMs: 20,
 };
 
 const clamp = (x: number, lo = 0, hi = 1): number =>
@@ -122,12 +128,48 @@ export const glide = (spec: GlideSpec): Shape => {
 
 export type StrikeSpec = {
   intensity: number;
-  /** Sharpness of the tap: hardness. */
+  /** Sharpness of the tap. */
   sharpness: number;
-  /** Body length: weight. 0 for a bare tap. */
+  /** Body length. 0 for a bare tap. */
   bodyMs: number;
   bodyIntensity: number;
   bodySharpness: number;
+  /**
+   * Shape of the body's fall (`at`: fraction of its length, `value`: 0..1),
+   * e.g. a sound's loudness envelope. Default: fast fall, long tail.
+   */
+  bodyCurve?: readonly { at: number; value: number }[] | undefined;
+};
+
+/** Intensity points of a body `body` ms long, ending silent at its end. */
+const bodyPoints = (
+  body: number,
+  shape: StrikeSpec['bodyCurve']
+): { t: number; value: number }[] => {
+  const clear = PART_LIMITS.tapClearMs;
+  const given = shape && shape.length >= 2 && body > clear + 1 ? shape : undefined;
+  // A sound's shape is laid over the body after the tap has cleared.
+  const raw = given
+    ? [
+        { t: 0, value: 1 },
+        { t: clear, value: 1 },
+        ...given.map((p) => ({
+          t: Math.round(clear + clamp(p.at) * (body - clear)),
+          value: clamp(p.value),
+        })),
+      ]
+    : [
+        { t: 0, value: 1 },
+        { t: body * 0.25, value: 0.55 },
+      ];
+  const points: { t: number; value: number }[] = [];
+  for (const p of raw) {
+    if (p.t >= body) break;
+    if (points.length === 0) points.push({ t: 0, value: p.value });
+    else if (p.t > points.at(-1)!.t) points.push(p);
+  }
+  points.push({ t: body, value: 0 });
+  return points;
 };
 
 export const strike = (spec: StrikeSpec): Shape => {
@@ -149,13 +191,12 @@ export const strike = (spec: StrikeSpec): Shape => {
       intensity: clamp(spec.bodyIntensity),
       sharpness: clamp(spec.bodySharpness),
     });
-    // Fast fall then a long tail, like a struck object ringing out.
+    // By default a fast fall then a long tail, like a struck object
+    // ringing out; with a sound, the sound's own fall.
     curves.push({
       control: 'intensity',
       points: [
-        { t: 0, value: 1 },
-        { t: body * 0.25, value: 0.55 },
-        { t: body, value: 0 },
+        ...bodyPoints(body, spec.bodyCurve),
         { t: body + PART_LIMITS.neutralGapMs, value: 1 },
       ],
     });

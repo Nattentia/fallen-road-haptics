@@ -11,6 +11,7 @@ import {
 } from './phrase';
 import { seeded } from './rng';
 import { energyOf } from './score';
+import { textureOfMaterial } from './texture';
 
 const OUTCOMES: Outcome[] = [
   'landed',
@@ -40,7 +41,7 @@ const input = (over: Partial<PhraseInput> = {}): PhraseInput => ({
   target: 'other',
   magnitude: 0.5,
   importance: 0.6,
-  material: DEFAULT_MATERIAL,
+  texture: textureOfMaterial(DEFAULT_MATERIAL),
   decoration: calm(),
   ...over,
 });
@@ -133,19 +134,19 @@ describe('phrase synthesis', () => {
 
   it('maps material to tap sharpness and body length', () => {
     const hard = synthesize(
-      input({ material: { ...DEFAULT_MATERIAL, hardness: 1 } })
+      input({ texture: textureOfMaterial({ ...DEFAULT_MATERIAL, hardness: 1 }) })
     );
     const soft = synthesize(
-      input({ material: { ...DEFAULT_MATERIAL, hardness: 0 } })
+      input({ texture: textureOfMaterial({ ...DEFAULT_MATERIAL, hardness: 0 }) })
     );
     expect(hard[0]!.events[0]!.sharpness).toBeGreaterThan(
       soft[0]!.events[0]!.sharpness
     );
     const heavy = synthesize(
-      input({ material: { ...DEFAULT_MATERIAL, weight: 1 } })
+      input({ texture: textureOfMaterial({ ...DEFAULT_MATERIAL, weight: 1 }) })
     );
     const light = synthesize(
-      input({ material: { ...DEFAULT_MATERIAL, weight: 0 } })
+      input({ texture: textureOfMaterial({ ...DEFAULT_MATERIAL, weight: 0 }) })
     );
     const body = (s: Shape[]) =>
       s[0]!.events.find((e) => e.kind === 'continuous');

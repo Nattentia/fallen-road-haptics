@@ -15,8 +15,8 @@ import {
  * - skeleton: which parts and in what timing pattern, from the outcome and whether it
  *   was good or bad for the player. Carries the information; never varies.
  * - size: intensities and lengths grow with magnitude, always monotonically.
- * - material: hardness → tap sharpness, weight → body length and dullness,
- *   roughness → grain texture.
+ * - texture: tap and body sharpness, body length and shape, grain. From the
+ *   sound played with the moment, else from material (texture.ts, v5 3.2).
  * - decoration: gauge state and tiny seeded variation, on extras only.
  *
  * All numbers are first guesses to be tuned by D1–D3 on a device.
@@ -28,6 +28,20 @@ export const DEFAULT_MATERIAL: Material = {
   hardness: 0.5,
   weight: 0.5,
   roughness: 0.3,
+};
+
+/** How a phrase feels, apart from its skeleton and size (texture.ts). */
+export type Texture = {
+  /** 0..1 */
+  tapSharpness: number;
+  /** 0..1 */
+  bodySharpness: number;
+  /** Body length factor, 0.6..1.4. */
+  bodyScale: number;
+  /** 0..1; above 0.4 a landed hit scatters grains. */
+  grain: number;
+  /** Shape of the ringing body: `at` is a fraction of its length. */
+  bodyCurve?: readonly { at: number; value: number }[] | undefined;
 };
 
 export type Decoration = {
@@ -46,7 +60,7 @@ export type PhraseInput = {
   target: Party;
   magnitude: number;
   importance: number;
-  material: Material;
+  texture: Texture;
   decoration: Decoration;
 };
 
@@ -57,16 +71,15 @@ const clamp = (x: number, lo = 0, hi = 1): number =>
 export const PHRASE_FLOOR = { importance: 0.15, magnitude: 0.05 };
 
 /** Size of a moment turned into the numbers every skeleton shares. */
-const sizing = (m: number, material: Material, decoration: Decoration) => {
+const sizing = (m: number, texture: Texture, decoration: Decoration) => {
   const tail = 1 - 0.3 * decoration.instability;
   return {
     tap: 0.45 + 0.55 * m,
-    body: (30 + 170 * m) * (0.6 + 0.8 * material.weight) * tail,
+    body: (30 + 170 * m) * texture.bodyScale * tail,
     bodyLevel: 0.3 + 0.4 * m,
-    bodySharp: clamp(0.5 - 0.4 * material.weight),
-    tapSharp: clamp(
-      0.35 + 0.6 * material.hardness + 0.1 * decoration.advantage
-    ),
+    bodySharp: clamp(texture.bodySharpness),
+    bodyCurve: texture.bodyCurve,
+    tapSharp: clamp(texture.tapSharpness + 0.1 * decoration.advantage),
     grainCount: 2 + 8 * m,
   };
 };
@@ -89,20 +102,20 @@ const unrest = (d: Decoration, from: number): Shape[] =>
       ]
     : [];
 
-/** Debris for rough materials. */
+/** Debris for grainy textures. */
 const debris = (
-  m: Material,
+  t: Texture,
   d: Decoration,
   size: number,
   from: number
 ): Shape[] =>
-  m.roughness > 0.4
+  t.grain > 0.4
     ? [
         shift(
           grains({
-            count: 2 + 4 * m.roughness * size,
+            count: 2 + 4 * t.grain * size,
             intervalMs: 16 + 4 * d.random(),
-            intensity: (0.2 + 0.25 * m.roughness) * (0.97 + 0.06 * d.random()),
+            intensity: (0.2 + 0.25 * t.grain) * (0.97 + 0.06 * d.random()),
             sharpness: 0.7,
             fade: 0.4,
             accel: 1.1,
@@ -116,7 +129,7 @@ export const synthesize = (p: PhraseInput): Shape[] => {
   const m = clamp(p.magnitude);
   if (p.importance < PHRASE_FLOOR.importance && m < PHRASE_FLOOR.magnitude)
     return [];
-  const s = sizing(m, p.material, p.decoration);
+  const s = sizing(m, p.texture, p.decoration);
   const good = p.valence === 'good';
   const bad = p.valence === 'bad';
   const bright = good ? 0.1 : bad ? -0.1 : 0;
@@ -131,6 +144,7 @@ export const synthesize = (p: PhraseInput): Shape[] => {
             bodyMs: s.body,
             bodyIntensity: s.bodyLevel,
             bodySharpness: clamp(s.bodySharp - 0.15),
+            bodyCurve: s.bodyCurve,
           }),
           // The body shakes: a wobbling swell after the hit.
           shift(
@@ -153,8 +167,9 @@ export const synthesize = (p: PhraseInput): Shape[] => {
           bodyMs: s.body,
           bodyIntensity: s.bodyLevel,
           bodySharpness: s.bodySharp,
+          bodyCurve: s.bodyCurve,
         }),
-        ...debris(p.material, p.decoration, m, 12),
+        ...debris(p.texture, p.decoration, m, 12),
         ...unrest(p.decoration, 30),
       ];
 
@@ -168,6 +183,7 @@ export const synthesize = (p: PhraseInput): Shape[] => {
             bodyMs: s.body * 0.35,
             bodyIntensity: s.bodyLevel * 0.7,
             bodySharpness: 0.6,
+            bodyCurve: s.bodyCurve,
           }),
           shift(
             bounce({
@@ -276,6 +292,7 @@ export const synthesize = (p: PhraseInput): Shape[] => {
             bodyMs: s.body * 0.5,
             bodyIntensity: s.bodyLevel,
             bodySharpness: s.bodySharp,
+            bodyCurve: s.bodyCurve,
           }),
           shift(
             grains({
@@ -320,6 +337,7 @@ export const synthesize = (p: PhraseInput): Shape[] => {
               bodyMs: s.body * 1.4,
               bodyIntensity: s.bodyLevel,
               bodySharpness: clamp(s.bodySharp - 0.2),
+              bodyCurve: s.bodyCurve,
             }),
             thudAt + 20
           ),

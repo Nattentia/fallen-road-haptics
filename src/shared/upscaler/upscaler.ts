@@ -18,6 +18,7 @@ import type {
 } from './contract';
 import { Gauges, type GaugeMoment } from './gauges';
 import { resolveMaterial } from './material';
+import { resolveTexture, textureOfMaterial } from './texture';
 import { Mixer } from './mixer';
 import { bounce, strike, type Shape } from './parts';
 import {
@@ -92,7 +93,7 @@ export class HapticUpscaler implements UpscalerEngine {
     for (const [id, f] of Object.entries(sounds)) this.sounds.set(id, f);
   }
 
-  /** Features of a sound the game registered (stage 5 decoration). */
+  /** Features of a sound the game registered: the texture of its moments (v5). */
   soundOf(id: string | undefined): SoundFeatures | undefined {
     return id === undefined ? undefined : this.sounds.get(id);
   }
@@ -235,6 +236,13 @@ export class HapticUpscaler implements UpscalerEngine {
     hints: readonly Hint[]
   ): Score[] {
     const { material, used } = resolveMaterial(signal.material, hints);
+    // v5: the sound played with the moment sets its texture; material only
+    // where the game gave it (hints do not reach a sounded moment).
+    const { texture, fromSound } = resolveTexture(
+      signal.material,
+      material,
+      this.soundOf(signal.sound)
+    );
     const deco = this.gauges.decoration(signal.gauges);
     const input: PhraseInput = {
       outcome: signal.outcome,
@@ -243,7 +251,7 @@ export class HapticUpscaler implements UpscalerEngine {
       target: signal.target,
       magnitude: signal.magnitude,
       importance: signal.importance,
-      material,
+      texture,
       decoration: {
         ...deco,
         random: seeded(
@@ -252,7 +260,9 @@ export class HapticUpscaler implements UpscalerEngine {
       },
     };
     const source: ScoreSource =
-      used.length > 0 ? { kind: 'mix', hints: used } : { kind: 'rule' };
+      !fromSound && used.length > 0
+        ? { kind: 'mix', hints: used }
+        : { kind: 'rule' };
     return synthesize(input).map((shape) =>
       this.toScore(shape, voice, at, source)
     );
@@ -431,7 +441,7 @@ export class HapticUpscaler implements UpscalerEngine {
           target: m.good ? 'other' : 'self',
           magnitude,
           importance,
-          material: resolveMaterial(undefined, []).material,
+          texture: textureOfMaterial(resolveMaterial(undefined, []).material),
           decoration: {
             instability: 0,
             advantage: 0,
