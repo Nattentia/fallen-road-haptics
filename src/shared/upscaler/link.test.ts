@@ -199,4 +199,63 @@ describe('UpscalerLink', () => {
     vi.advanceTimersByTime(100);
     expect(wakes).toEqual([1100]);
   });
+
+  it('still plays the base when the engine throws, and tells', () => {
+    const problems: string[] = [];
+    const sent: Command[][] = [];
+    const broken: UpscalerEngine = {
+      define: () => [],
+      consume: () => {
+        throw new Error('boom');
+      },
+      hint: () => {
+        throw new Error('boom');
+      },
+      wake: () => ({ baseGain: 1, commands: [] }),
+    };
+    const link = new UpscalerLink(
+      broken,
+      (c) => sent.push(c),
+      () => 5,
+      (p) => problems.push(p)
+    );
+    link.base('hit');
+    expect(() => link.signal(event('hit'))).not.toThrow();
+    expect(ops(sent[0])).toEqual(['base:hit@1']);
+    expect(problems).toHaveLength(1);
+  });
+
+  it('drops commands the contract rejects', () => {
+    const problems: string[] = [];
+    const sent: Command[][] = [];
+    const engine: UpscalerEngine = {
+      define: () => [],
+      consume: () => ({
+        baseGain: 1,
+        commands: [
+          {
+            op: 'drive',
+            voice: 'v',
+            stream: 's',
+            at: 0,
+            intensity: Number.NaN,
+            sharpness: 0.5,
+            rampMs: 0,
+          },
+          { op: 'release', voice: 'v', at: 0, fadeMs: 10 },
+        ],
+      }),
+      hint: () => ({ baseGain: 1, commands: [] }),
+      wake: () => ({ baseGain: 1, commands: [] }),
+    };
+    const link = new UpscalerLink(
+      engine,
+      (c) => sent.push(c),
+      () => 0,
+      (p) => problems.push(p)
+    );
+    link.signal(event());
+    expect(ops(sent[0])).toEqual(['release']);
+    expect(problems[0]).toMatch(/dropped drive/);
+  });
 });

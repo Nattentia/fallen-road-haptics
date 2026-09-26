@@ -59,8 +59,7 @@ final class UpscalerPlayer {
     func setMode(_ newMode: Mode) {
         mode = newMode
         guard newMode != .full else { return }
-        let now = backend.nowMs
-        for voice in Array(voices.keys) { release(voice, at: now, fadeMs: 20) }
+        releaseAll()
     }
 
     func apply(_ command: UpscalerCommand) {
@@ -115,6 +114,12 @@ final class UpscalerPlayer {
     /// The device restarted: every player it had is gone.
     func reset() {
         voices.removeAll()
+    }
+
+    /// Fades out every voice (the page that drove them went away).
+    func releaseAll(fadeMs: Double = 20) {
+        let now = backend.nowMs
+        for voice in Array(voices.keys) { release(voice, at: now, fadeMs: fadeMs) }
     }
 
     // MARK: - Internals

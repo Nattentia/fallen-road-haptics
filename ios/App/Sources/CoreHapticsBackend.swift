@@ -15,6 +15,11 @@ final class CoreHapticsBackend: HapticBackend {
     private var engine: CHHapticEngine?
     private var players: [Int: CHHapticAdvancedPatternPlayer] = [:]
     private var holdLevels: [Int: (intensity: Double, sharpness: Double)] = [:]
+    /// Scores by handle, so a fade can start from the level the score's own
+    /// intensity curve has reached.
+    private var scores: [Int: Score] = [:]
+    /// Set when the system stopped the engine; the next call restarts it.
+    private var needsStart = false
     private var basePlayer: CHHapticPatternPlayer?
     private var nextHandle = 1
     private let jsNow: () -> Double
@@ -39,22 +44,51 @@ final class CoreHapticsBackend: HapticBackend {
             let engine = try CHHapticEngine()
             engine.playsHapticsOnly = true
             engine.isAutoShutdownEnabled = false
+            // Core Haptics calls these on its own queue; all state lives on main.
             engine.resetHandler = { [weak self] in
-                guard let self else { return }
-                self.players.removeAll()
-                self.holdLevels.removeAll()
-                self.basePlayer = nil
-                try? self.engine?.start()
-                self.onReset()
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    self.forgetPlayers()
+                    try? self.engine?.start()
+                    self.onReset()
+                }
             }
             engine.stoppedHandler = { [weak self] reason in
-                self?.log("engine stopped: \(reason.rawValue)")
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    self.log("engine stopped: \(reason.rawValue)")
+                    self.forgetPlayers()
+                    self.needsStart = true
+                    self.onReset()
+                }
             }
             try engine.start()
             self.engine = engine
         } catch {
             log("engine start failed: \(error)")
         }
+    }
+
+    private func forgetPlayers() {
+        players.removeAll()
+        holdLevels.removeAll()
+        scores.removeAll()
+        basePlayer = nil
+    }
+
+    /// Restarts an engine the system stopped (app switch, interruption).
+    private func ensureRunning() -> CHHapticEngine? {
+        guard let engine else { return nil }
+        if needsStart {
+            do {
+                try engine.start()
+                needsStart = false
+            } catch {
+                log("engine restart failed: \(error)")
+                return nil
+            }
+        }
+        return engine
     }
 
     /// Engine time for a JS clock time; the past maps to "now".
@@ -72,6 +106,7 @@ final class CoreHapticsBackend: HapticBackend {
             DispatchQueue.main.async {
                 self?.players[handle] = nil
                 self?.holdLevels[handle] = nil
+                self?.scores[handle] = nil
             }
         }
         return handle
@@ -109,10 +144,11 @@ final class CoreHapticsBackend: HapticBackend {
     }
 
     func start(score: Score, atMs: Double) -> Int? {
-        guard let engine else { return nil }
+        guard let engine = ensureRunning() else { return nil }
         do {
             let player = try engine.makeAdvancedPlayer(with: Self.pattern(score))
             let handle = register(player)
+            scores[handle] = score
             try player.start(atTime: engineTime(atMs))
             return handle
         } catch {
@@ -125,7 +161,9 @@ final class CoreHapticsBackend: HapticBackend {
         guard let player = players[handle] else { return }
         let at = engineTime(atMs)
         if fadeMs > 0, let engine {
-            let from = holdLevels[handle]?.intensity ?? 1
+            let from = holdLevels[handle]?.intensity
+                ?? scores[handle].map { $0.intensityControl(atMs: max(0, atMs - $0.at)) }
+                ?? 1
             let curve = CHHapticParameterCurve(
                 parameterID: .hapticIntensityControl,
                 controlPoints: [
@@ -145,7 +183,7 @@ final class CoreHapticsBackend: HapticBackend {
     // MARK: - Holds
 
     func startHold(intensity: Double, sharpness: Double, atMs: Double) -> Int? {
-        guard let engine else { return nil }
+        guard let engine = ensureRunning() else { return nil }
         let carrier = CHHapticEvent(
             eventType: .hapticContinuous,
             parameters: [
@@ -206,7 +244,7 @@ final class CoreHapticsBackend: HapticBackend {
     // MARK: - Base
 
     func playBase(_ base: BaseVibration, gain: Double, atMs: Double) -> Bool {
-        guard let engine else { return false }
+        guard let engine = ensureRunning() else { return false }
         let parameters = [
             CHHapticEventParameter(parameterID: .hapticIntensity, value: Float(base.intensity * gain)),
             CHHapticEventParameter(parameterID: .hapticSharpness, value: Float(base.sharpness)),

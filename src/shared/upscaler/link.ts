@@ -7,7 +7,11 @@ import {
   type Hint,
   type UpscalerEngine,
   type UpscalerStep,
+  validateCommand,
 } from './contract';
+
+/** What a failed step falls back to: the base alone, never nothing. */
+const BASE_ONLY: UpscalerStep = { baseGain: 1, commands: [] };
 
 /**
  * Sits between the game and the native player. It hands each signal to the
@@ -27,8 +31,23 @@ export class UpscalerLink {
   constructor(
     private readonly engine: UpscalerEngine,
     private readonly send: (commands: Command[]) => void,
-    private readonly now: () => number = () => performance.now()
+    private readonly now: () => number = () => performance.now(),
+    private readonly report: (problem: string) => void = (p) =>
+      console.warn(`[upscaler] ${p}`)
   ) {}
+
+  /**
+   * Runs an engine call so that nothing it throws reaches the game, and the
+   * paired base vibration still plays (fallback: base only).
+   */
+  private guarded(call: () => UpscalerStep): UpscalerStep {
+    try {
+      return call();
+    } catch (error) {
+      this.report(`engine failed: ${String(error)}`);
+      return BASE_ONLY;
+    }
+  }
 
   define(bases: readonly BaseVibration[]): void {
     this.send(this.engine.define(bases));
@@ -65,16 +84,21 @@ export class UpscalerLink {
   }
 
   hint(hint: Hint): void {
-    this.deliver(this.engine.hint(hint, this.now()), null);
+    this.deliver(
+      this.guarded(() => this.engine.hint(hint, this.now())),
+      null
+    );
   }
 
   private run(signal: Signal, base: string | null): void {
     const now = this.now();
-    const step = this.engine.consume(signal, {
-      now,
-      gameToJs: now - signal.t,
-      paired: base !== null,
-    });
+    const step = this.guarded(() =>
+      this.engine.consume(signal, {
+        now,
+        gameToJs: now - signal.t,
+        paired: base !== null,
+      })
+    );
     this.deliver(step, base);
   }
 
@@ -87,7 +111,13 @@ export class UpscalerLink {
         at: this.now(),
         gain: Math.min(BASE_GAIN_MAX, Math.max(BASE_GAIN_MIN, step.baseGain)),
       });
-    commands.push(...step.commands);
+    // A command the contract rejects (a NaN from a game value, say) is
+    // dropped here rather than sent to the player.
+    for (const c of step.commands) {
+      const issues = validateCommand(c);
+      if (issues.length === 0) commands.push(c);
+      else this.report(`dropped ${c.op}: ${issues.join('; ')}`);
+    }
     if (commands.length > 0) this.send(commands);
     if (step.wakeAt !== undefined) this.scheduleWake(step.wakeAt);
   }
@@ -115,7 +145,10 @@ export class UpscalerLink {
       () => {
         this.wakeTimer = null;
         this.wakeAt = Infinity;
-        this.deliver(this.engine.wake(this.now()), null);
+        this.deliver(
+          this.guarded(() => this.engine.wake(this.now())),
+          null
+        );
       },
       Math.max(0, at - this.now())
     );

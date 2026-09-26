@@ -24,6 +24,12 @@ final class LatencyLog {
     private(set) var syncRtt: Double = .nan
     let sessionStart = Date()
 
+    /// A new page has its own JS clock origin; wait for its first sync.
+    func resetSync() {
+        offset = nil
+        syncRtt = .nan
+    }
+
     func sync(offset: Double, rtt: Double) {
         self.offset = offset
         syncRtt = rtt

@@ -21,6 +21,15 @@ type LabWindow = Window & {
   __hsLabResult?: (probe: string, result: unknown) => void;
 };
 
+type SessionState = {
+  probes: Record<string, unknown>;
+  ratings: Map<string, Rating>;
+  /** Shuffled variant order per trial, fixed for the session. */
+  orders: Map<string, number[]>;
+};
+
+const STATE: Record<string, SessionState> = {};
+
 type Rating = {
   trial: string;
   label: string;
@@ -71,8 +80,13 @@ export const mountLab = (session = 's1'): void => {
   const current = SESSIONS[session] ?? SESSIONS.s1!;
   const sessionId = SESSIONS[session] ? session : 's1';
   const inApp = installClockSync();
-  const probes: Record<string, unknown> = {};
-  const ratings = new Map<string, Rating>();
+  // Answers survive switching sessions (and switching back) until saved.
+  const state = (STATE[sessionId] ??= {
+    probes: {},
+    ratings: new Map(),
+    orders: new Map(),
+  });
+  const { probes, ratings } = state;
   let voiceSeq = 0;
 
   document.body.innerHTML = '';
@@ -89,7 +103,9 @@ export const mountLab = (session = 's1'): void => {
     switcher.append(
       button(
         s.title,
-        () => mountLab(id),
+        () => {
+          if (id !== sessionId) mountLab(id);
+        },
         id === sessionId ? 'background:#4a3a1c' : ''
       )
     );
@@ -152,7 +168,9 @@ export const mountLab = (session = 's1'): void => {
     );
     box.append(el('h3', trial.title, 'margin:4px 0'));
     box.append(el('p', trial.question, 'margin:4px 0;color:#cdbf9f'));
-    const order = shuffled(trial.variants.map((_, i) => i));
+    const order =
+      state.orders.get(trial.id) ?? shuffled(trial.variants.map((_, i) => i));
+    state.orders.set(trial.id, order);
     order.forEach((variantIndex, position) => {
       const label = String.fromCharCode(65 + position);
       const key = `${trial.id}/${label}`;
@@ -184,6 +202,8 @@ export const mountLab = (session = 's1'): void => {
           for (const other of answerButtons) other.style.outline = '';
           b.style.outline = '2px solid #ffd75e';
         });
+        if (ratings.get(key)?.answer === answer)
+          b.style.outline = '2px solid #ffd75e';
         answerButtons.push(b);
         row.append(b);
       }

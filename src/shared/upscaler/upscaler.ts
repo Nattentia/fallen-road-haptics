@@ -55,8 +55,10 @@ type Recent = {
   importance: number;
 };
 
+/** Rough grains under a stream, on a voice of their own. */
 type Texture = {
   voice: string;
+  importance: number;
   rateHz: number;
   intensity: number;
   scheduledUntil: number;
@@ -170,9 +172,7 @@ export class HapticUpscaler implements UpscalerEngine {
     }
 
     const closing = step === 'resolve' || step === 'end';
-    const sounding =
-      this.mixer.sounding(voice, now).length > 0 ||
-      [...this.textures.keys()].some((k) => k.startsWith(`${voice}/`));
+    const sounding = this.mixer.sounding(voice, now).length > 0;
     if (closing)
       commands.push(...this.closeStreams(voice, now, TIMING.streamFadeMs));
 
@@ -270,8 +270,7 @@ export class HapticUpscaler implements UpscalerEngine {
           fadeMs: TIMING.streamFadeMs,
         },
       ];
-      if (this.textures.delete(key) && !signal.chain)
-        out.push(...this.revise(voice, now, []));
+      out.push(...this.stopTexture(key, now, TIMING.streamFadeMs));
       if (!signal.chain && chain.streams.size === 0) this.chains.delete(voice);
       return out;
     }
@@ -313,7 +312,8 @@ export class HapticUpscaler implements UpscalerEngine {
         texture.intensity = levels.grainIntensity;
       } else {
         const t: Texture = {
-          voice,
+          voice: `${voice}~${signal.id}`,
+          importance: signal.importance ?? 0.3,
           rateHz: levels.grainRateHz,
           intensity: levels.grainIntensity,
           scheduledUntil: now,
@@ -322,9 +322,17 @@ export class HapticUpscaler implements UpscalerEngine {
         out.push(...this.renewTexture(t, now));
       }
     } else if (texture) {
-      this.textures.delete(key);
+      out.push(...this.stopTexture(key, now, TIMING.streamFadeMs));
     }
     return out;
+  }
+
+  private stopTexture(key: string, now: number, fadeMs: number): Command[] {
+    const t = this.textures.get(key);
+    if (!t) return [];
+    this.textures.delete(key);
+    this.mixer.forget(t.voice);
+    return [{ op: 'release', voice: t.voice, at: now, fadeMs }];
   }
 
   /** Schedules the next chunk of rough-texture grains. */
@@ -344,6 +352,7 @@ export class HapticUpscaler implements UpscalerEngine {
     const score = this.toScore({ events, curves: [] }, t.voice, from, {
       kind: 'rule',
     });
+    this.mixer.track(t.voice, t.importance, score);
     return [{ op: 'play', voice: t.voice, score }];
   }
 
@@ -354,7 +363,8 @@ export class HapticUpscaler implements UpscalerEngine {
       out.push({ op: 'unhold', voice, stream, at: now, fadeMs });
     chain?.streams.clear();
     for (const key of [...this.textures.keys()])
-      if (key.startsWith(`${voice}/`)) this.textures.delete(key);
+      if (key.startsWith(`${voice}/`))
+        out.push(...this.stopTexture(key, now, fadeMs));
     return out;
   }
 

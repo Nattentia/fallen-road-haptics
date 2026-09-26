@@ -34,6 +34,15 @@ struct ScoreCurve: Codable, Equatable {
     enum Control: String, Codable { case intensity, sharpness }
     var control: Control
     var points: [CurvePoint]
+
+    func value(atMs t: Double, neutral: Double) -> Double {
+        guard let first = points.first, t >= first.t else { return neutral }
+        for (a, b) in zip(points, points.dropFirst()) where t <= b.t {
+            let span = b.t - a.t
+            return span > 0 ? a.value + (t - a.t) / span * (b.value - a.value) : b.value
+        }
+        return points[points.count - 1].value
+    }
 }
 
 struct HintUse: Codable, Equatable {
@@ -59,6 +68,14 @@ struct Score: Codable, Equatable {
     /// Where the last event ends, ms from the score's zero.
     var end: Double {
         events.map { $0.t + ($0.duration ?? 0) }.max() ?? 0
+    }
+
+    /// The intensity multiplier the score's curves give at `atMs` from its
+    /// zero: neutral (1) before a curve starts, held after it ends.
+    func intensityControl(atMs t: Double) -> Double {
+        curves.filter { $0.control == .intensity }.reduce(1.0) { product, curve in
+            product * curve.value(atMs: t, neutral: 1)
+        }
     }
 }
 
@@ -137,7 +154,12 @@ extension UpscalerCommand: Decodable {
     }
 
     /// Decodes a command posted from JS (a WKScriptMessage body dictionary).
+    struct InvalidMessage: Error {}
+
     static func from(message: Any) throws -> UpscalerCommand {
+        // data(withJSONObject:) raises an Objective-C exception (not a Swift
+        // error) for NaN or other invalid values; check first.
+        guard JSONSerialization.isValidJSONObject(message) else { throw InvalidMessage() }
         let data = try JSONSerialization.data(withJSONObject: message)
         return try JSONDecoder().decode(UpscalerCommand.self, from: data)
     }

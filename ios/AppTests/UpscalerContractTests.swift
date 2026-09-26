@@ -52,4 +52,22 @@ final class UpscalerContractTests: XCTestCase {
         let message: [String: Any] = ["op": "release", "voice": "v", "at": 12.5, "fadeMs": 30]
         XCTAssertEqual(try UpscalerCommand.from(message: message), .release(voice: "v", at: 12.5, fadeMs: 30))
     }
+
+    func testRejectsNaNWithoutRaising() {
+        let message: [String: Any] = ["op": "release", "voice": "v", "at": Double.nan, "fadeMs": 30]
+        XCTAssertThrowsError(try UpscalerCommand.from(message: message))
+    }
+
+    func testReadsTheIntensityCurveLevel() {
+        let score = Score(
+            id: "s", at: 1000, layer: "upscale", source: ScoreSource(kind: "rule", hints: nil),
+            events: [ScoreEvent(kind: .continuous, t: 0, duration: 100, intensity: 1, sharpness: 0.5)],
+            curves: [ScoreCurve(control: .intensity, points: [
+                CurvePoint(t: 0, value: 1), CurvePoint(t: 100, value: 0), CurvePoint(t: 101, value: 1),
+            ])]
+        )
+        XCTAssertEqual(score.intensityControl(atMs: 50), 0.5, accuracy: 1e-9)
+        XCTAssertEqual(score.intensityControl(atMs: -5), 1)
+        XCTAssertEqual(score.intensityControl(atMs: 500), 1)
+    }
 }

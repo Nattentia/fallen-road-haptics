@@ -16,6 +16,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
     private static let gameURL = URL(string: "app://local/game.html?probe=1")!
     private static let labURL = URL(string: "app://local/game.html?lab=1")!
     private let statsLabel = UILabel()
+    private weak var modeButton: UIButton?
     private var statsTimer: Timer?
 
     override var prefersStatusBarHidden: Bool { true }
@@ -70,6 +71,10 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         let seq = (body["seq"] as? NSNumber)?.intValue ?? 0
 
         switch type {
+        case "hello":
+            // A page (re)loaded: whatever the previous page held has no owner.
+            upscaler.releaseAll()
+            log.resetSync()
         case "ping":
             let sentAt = (body["t"] as? NSNumber)?.doubleValue ?? 0
             webView.evaluateJavaScript("window.__hsPong&&window.__hsPong(\(sentAt),\(received))")
@@ -203,7 +208,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         statsLabel.isUserInteractionEnabled = false
 
         let buttons = UIStackView(arrangedSubviews: [
-            makeButton("햅틱: \(UpscalerPlayer.Mode.full.rawValue)", #selector(toggleHaptics)),
+            makeButton("햅틱: \(UpscalerPlayer.Mode.full.rawValue)", #selector(toggleHaptics), keep: true),
             makeButton("기록 저장", #selector(exportLog)),
             makeButton("Lab", #selector(openLab)),
             makeButton("업스케일 Lab", #selector(openUpscalerLab)),
@@ -223,7 +228,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         ])
     }
 
-    private func makeButton(_ title: String, _ action: Selector) -> UIButton {
+    private func makeButton(_ title: String, _ action: Selector, keep: Bool = false) -> UIButton {
         var config = UIButton.Configuration.filled()
         config.title = title
         config.baseBackgroundColor = UIColor.black.withAlphaComponent(0.55)
@@ -231,6 +236,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         config.buttonSize = .mini
         let button = UIButton(configuration: config)
         button.addTarget(self, action: action, for: .touchUpInside)
+        if keep { modeButton = button }
         return button
     }
 
@@ -238,8 +244,12 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
     @objc private func toggleHaptics(_ sender: UIButton) {
         let all = UpscalerPlayer.Mode.allCases
         let next = all[(all.firstIndex(of: upscaler.mode)! + 1) % all.count]
-        upscaler.setMode(next)
-        sender.configuration?.title = "햅틱: \(next.rawValue)"
+        setMode(next)
+    }
+
+    private func setMode(_ mode: UpscalerPlayer.Mode) {
+        upscaler.setMode(mode)
+        modeButton?.configuration?.title = "햅틱: \(mode.rawValue)"
     }
 
     @objc private func exportLog() {
@@ -253,6 +263,8 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
     }
 
     @objc private func openUpscalerLab() {
+        // Lab trials compare conditions themselves; they need every layer.
+        setMode(.full)
         webView.load(URLRequest(url: Self.labURL))
     }
 

@@ -107,6 +107,11 @@ export class Mixer {
     return this.active.filter((a) => a.voice === voice).map((a) => a.score);
   }
 
+  /** Records a score played outside `place` (so it can be ducked later). */
+  track(voice: string, importance: number, score: Score): void {
+    this.active.push({ voice, importance, score });
+  }
+
   /** The voice's scores are cut from `now` (revise or release elsewhere). */
   forget(voice: string): void {
     this.active = this.active.filter((a) => a.voice !== voice);

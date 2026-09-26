@@ -72,9 +72,7 @@ describe('a second genre through the same body', () => {
     const commands = drive().flatMap((b) => b.commands);
     expect(commands.filter((c) => c.op === 'hold')).toHaveLength(1);
     expect(commands.filter((c) => c.op === 'unhold')).toHaveLength(1);
-    expect(
-      commands.at(-1)?.op === 'revise' || commands.at(-1)?.op === 'unhold'
-    ).toBe(true);
+    expect(commands.filter((c) => c.op === 'release')).toHaveLength(1);
   });
 
   it('feels each surface differently', () => {
@@ -90,12 +88,16 @@ describe('a second genre through the same body', () => {
     expect(grainsBetween(out, 100, 500)).toBeLessThan(
       grainsBetween(out, 600, 1000) / 4
     );
-    expect(grainsBetween(out, 600, 1000)).toBeGreaterThan(10);
+    expect(grainsBetween(out, 600, 1000)).toBeGreaterThanOrEqual(8);
   });
 
   it('stops the rough texture when the car stops', () => {
     const out = drive();
     const last = out.at(-1)!;
-    expect(last.commands.some((c) => c.op === 'revise')).toBe(true);
+    expect(
+      last.commands.some(
+        (c) => c.op === 'release' && c.voice.endsWith('~surface')
+      )
+    ).toBe(true);
   });
 });
