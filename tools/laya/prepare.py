@@ -117,17 +117,17 @@ def main():
     # Live questions: prefixes whole, state phrases one by one, joined on the
     # phone. verify() stops the build if joining would differ from the real
     # tokenizer anywhere.
-    vocab = json.loads(Path(args.vocabulary).read_text(encoding="utf-8"))
+    live_vocab = json.loads(Path(args.vocabulary).read_text(encoding="utf-8"))
     live_defs = {
         q["id"]: {"type": q["type"], "instructions": q["instructions"], "criteria": q["criteria"]}
-        for q in vocab["questions"]
+        for q in live_vocab["questions"]
     }
     live_questions = [
         {"id": qid, "internal": ref._to_internal(d)} for qid, d in live_defs.items()
     ]
     head_max_len = ref.cfg.get("head_max_len", 192)
     piece_ids, prefixes = pieces.verify(
-        ref.tok, vocab["pieces"], live_questions, build_prefix, build_sequence,
+        ref.tok, live_vocab["pieces"], live_questions, build_prefix, build_sequence,
         max_len=max_len, head_max_len=head_max_len,
     )
     for prefix, _ in prefixes.values():
@@ -206,7 +206,7 @@ def main():
     live_states = [
         pieces.fit(
             max((pf for pf, _ in prefixes.values()), key=len), piece_ids,
-            [rng.choice(vocab["pieces"]) for _ in range(rng.randint(3, 8))], max_len,
+            [rng.choice(live_vocab["pieces"]) for _ in range(rng.randint(3, 8))], max_len,
         )
         for _ in range(24)
     ]
