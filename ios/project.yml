@@ -60,6 +60,7 @@ targets:
         buildPhase: resources
       - path: App/Sources/UpscalerContract.swift
       - path: App/Sources/UpscalerPlayer.swift
+      - path: App/Sources/LayaLive.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.github.nattentia.fallenroadhaptics.tests
