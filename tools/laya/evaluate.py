@@ -23,6 +23,10 @@ Two ways to ask, three ways to state the moment:
   --state full        description + result, size, parties (what the phone sends)
   --state desc        description only
   --state fields      "mover: …. action: …. target: …." (validation.json)
+
+  --criteria plain    bare option labels
+  --criteria rubric   each option (true/false side for noul) carries a short
+                      criterion with example objects (rubric.json, option A)
 """
 
 import argparse
@@ -52,18 +56,29 @@ def argmax(p):
     return max(range(len(p)), key=lambda i: p[i])
 
 
-def build_questions(vocab, validation, mode):
+def build_questions(vocab, validation, mode, rubric=None):
     out = {}
     if mode == "choice":
         for q in vocab["questions"]:
-            d = {"type": q["type"], "instructions": q["instructions"], "criteria": q["criteria"]}
+            labels = q["criteria"]
+            if rubric:
+                described = rubric["choice"][q["id"]]
+                assert list(described) == labels, f"rubric labels differ for {q['id']}"
+                criteria = {label: described[label] for label in labels}
+                reverse = {label: described[label] for label in reversed(labels)}
+            else:
+                criteria, reverse = labels, list(reversed(labels))
+            d = {"type": q["type"], "instructions": q["instructions"], "criteria": criteria}
             out[q["id"]] = d
-            out[q["id"] + "~rev"] = {**d, "criteria": list(reversed(q["criteria"]))}
+            out[q["id"] + "~rev"] = {**d, "criteria": reverse}
         return out
     for qid, statements in validation["noul"].items():
         names = ["pos", "neg"] if qid != "contact" else [str(i) for i in range(len(statements))]
-        for name, text in zip(names, statements):
-            out[f"{qid}~{name}"] = {"type": "noul", "instructions": text}
+        for i, (name, text) in enumerate(zip(names, statements)):
+            q = {"type": "noul", "instructions": text}
+            if rubric:
+                q["criteria"] = rubric["noul"][qid][i]
+            out[f"{qid}~{name}"] = q
     return out
 
 
@@ -159,7 +174,7 @@ def chance(questions, mode, validation, runs=500, seed=3):
     def get(state):
         raw = {}
         for qid, q in questions.items():
-            k = len(q.get("criteria") or [0, 1])
+            k = len(q["criteria"]) if q["type"] == "choice" else 2
             w = [-math.log(1 - rng.random()) for _ in range(k)]
             t = sum(w)
             raw[qid] = [x / t for x in w]
@@ -222,9 +237,9 @@ def markdown(title, report):
     return "\n".join(lines)
 
 
-def run(ask, vocab, validation, qmode, smode):
+def run(ask, vocab, validation, qmode, smode, rubric=None):
     """`ask(text, questions)` returns {qid: [probabilities in option order]}."""
-    questions = build_questions(vocab, validation, qmode)
+    questions = build_questions(vocab, validation, qmode, rubric)
     report, cache = evaluate(
         lambda s: shape(ask(state_text(s, validation, smode), questions), qmode), validation
     )
@@ -237,6 +252,7 @@ def main():
     parser.add_argument("--model", required=True)
     parser.add_argument("--questions", choices=["choice", "noul"], default="choice")
     parser.add_argument("--state", choices=["full", "desc", "fields"], default="full")
+    parser.add_argument("--criteria", choices=["plain", "rubric"], default="plain")
     parser.add_argument("--cache", default=".laya-cache")
     parser.add_argument("--out", default="d5-report.json")
     args = parser.parse_args()
@@ -257,10 +273,25 @@ def main():
             for qid, a in answers.items()
         }
 
+    def budget(questions):
+        """Laya cuts each option at 48 tokens and the question part at 192: warn if hit."""
+        from laya_coreml.common import render_options
+
+        for qid, q in questions.items():
+            opts = render_options(agent._to_internal(q))
+            sizes = [1 + len(agent.tok(" " + o, add_special_tokens=False)["input_ids"]) for o in opts]
+            if max(sizes) > 49 or sum(sizes) > 192 - 16:
+                print(f"> ⚠️ {qid}: option tokens {sizes} hit Laya's limits (48 each, 176 total)")
+                print()
+
     vocab = json.loads((HERE / "vocabulary.json").read_text(encoding="utf-8"))
     validation = json.loads((HERE / "validation.json").read_text(encoding="utf-8"))
-    report, cache = run(ask, vocab, validation, args.questions, args.state)
-    title = f"{args.model} · {args.questions} · {args.state}"
+    rubric = None
+    if args.criteria == "rubric":
+        rubric = json.loads((HERE / "rubric.json").read_text(encoding="utf-8"))
+    budget(build_questions(vocab, validation, args.questions, rubric))
+    report, cache = run(ask, vocab, validation, args.questions, args.state, rubric)
+    title = f"{args.model} · {args.questions} · {args.state} · {args.criteria}"
     Path(args.out).write_text(json.dumps({"title": title, "report": report, "answers": cache}, indent=2))
     print(markdown(title, report))
 
