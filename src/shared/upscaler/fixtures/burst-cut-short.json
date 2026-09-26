@@ -1,0 +1,161 @@
+{
+  "name": "burst-cut-short",
+  "records": [
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "shield",
+        "value": 1,
+        "goodWhen": "high",
+        "owner": "self",
+        "thresholds": [
+          0.34
+        ],
+        "description": "player shield durability"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "health",
+        "value": 1,
+        "goodWhen": "high",
+        "owner": "self",
+        "thresholds": [
+          0.3
+        ],
+        "description": "player health"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "enemy_guard",
+        "value": 1,
+        "goodWhen": "low",
+        "owner": "other",
+        "thresholds": [
+          0.25
+        ],
+        "description": "enemy guard"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "enemy_health",
+        "value": 1,
+        "goodWhen": "low",
+        "owner": "other",
+        "thresholds": [
+          0.25
+        ],
+        "description": "enemy health"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "burst",
+        "value": 0,
+        "goodWhen": "high",
+        "owner": "self",
+        "description": "player burst charge"
+      }
+    },
+    {
+      "kind": "base",
+      "name": "burst_start",
+      "t": 1000
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "event",
+        "t": 1000,
+        "magnitude": 0.7,
+        "valence": "good",
+        "importance": 0.8,
+        "actor": "self",
+        "target": "other",
+        "outcome": "none",
+        "description": "player unleashes paper-rending combo",
+        "base": "burst_start",
+        "chain": {
+          "id": "burst-1",
+          "step": "start"
+        }
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "clock",
+        "clock": "grid",
+        "t": 1000,
+        "interval": 180,
+        "until": 1920,
+        "chain": {
+          "id": "burst-1",
+          "step": "progress"
+        }
+      }
+    },
+    {
+      "kind": "base",
+      "name": "enemy_hit",
+      "t": 1200
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "event",
+        "t": 1200,
+        "magnitude": 0.2857142857142857,
+        "valence": "good",
+        "importance": 0.4,
+        "actor": "self",
+        "target": "other",
+        "outcome": "landed",
+        "description": "player paper-rending combo hits enemy with paper sword",
+        "gauges": [
+          "enemy_health"
+        ],
+        "sound": "hit_sword",
+        "base": "enemy_hit",
+        "chain": {
+          "id": "burst-1",
+          "step": "progress"
+        }
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "event",
+        "t": 1380,
+        "magnitude": 0,
+        "valence": "neutral",
+        "importance": 0,
+        "actor": "self",
+        "target": "other",
+        "outcome": "none",
+        "description": "player burst is cut short",
+        "chain": {
+          "id": "burst-1",
+          "step": "cancel"
+        }
+      }
+    }
+  ]
+}

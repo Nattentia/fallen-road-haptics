@@ -1,0 +1,110 @@
+{
+  "name": "attack-evaded",
+  "records": [
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "shield",
+        "value": 1,
+        "goodWhen": "high",
+        "owner": "self",
+        "thresholds": [
+          0.34
+        ],
+        "description": "player shield durability"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "health",
+        "value": 1,
+        "goodWhen": "high",
+        "owner": "self",
+        "thresholds": [
+          0.3
+        ],
+        "description": "player health"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "enemy_guard",
+        "value": 1,
+        "goodWhen": "low",
+        "owner": "other",
+        "thresholds": [
+          0.25
+        ],
+        "description": "enemy guard"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "enemy_health",
+        "value": 1,
+        "goodWhen": "low",
+        "owner": "other",
+        "thresholds": [
+          0.25
+        ],
+        "description": "enemy health"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "burst",
+        "value": 0,
+        "goodWhen": "high",
+        "owner": "self",
+        "description": "player burst charge"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "clock",
+        "clock": "expect",
+        "t": 1000,
+        "at": 1500,
+        "description": "enemy winds up a slash attack",
+        "importance": 0.6142857142857143,
+        "chain": {
+          "id": "attack-1",
+          "step": "start"
+        }
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "event",
+        "t": 1500,
+        "magnitude": 0.35714285714285715,
+        "actor": "other",
+        "target": "self",
+        "valence": "good",
+        "importance": 0.4,
+        "outcome": "missed",
+        "description": "player dodges enemy slash attack",
+        "chain": {
+          "id": "attack-1",
+          "step": "resolve"
+        }
+      }
+    }
+  ]
+}

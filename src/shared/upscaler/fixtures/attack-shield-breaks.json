@@ -1,0 +1,178 @@
+{
+  "name": "attack-shield-breaks",
+  "records": [
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "shield",
+        "value": 1,
+        "goodWhen": "high",
+        "owner": "self",
+        "thresholds": [
+          0.34
+        ],
+        "description": "player shield durability"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "health",
+        "value": 1,
+        "goodWhen": "high",
+        "owner": "self",
+        "thresholds": [
+          0.3
+        ],
+        "description": "player health"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "enemy_guard",
+        "value": 1,
+        "goodWhen": "low",
+        "owner": "other",
+        "thresholds": [
+          0.25
+        ],
+        "description": "enemy guard"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "enemy_health",
+        "value": 1,
+        "goodWhen": "low",
+        "owner": "other",
+        "thresholds": [
+          0.25
+        ],
+        "description": "enemy health"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "burst",
+        "value": 0,
+        "goodWhen": "high",
+        "owner": "self",
+        "description": "player burst charge"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 0,
+        "id": "shield",
+        "value": 0.2,
+        "goodWhen": "high",
+        "owner": "self",
+        "thresholds": [
+          0.34
+        ],
+        "description": "player shield durability"
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "clock",
+        "clock": "expect",
+        "t": 1000,
+        "at": 1500,
+        "description": "enemy winds up a slash attack",
+        "importance": 0.6142857142857143,
+        "chain": {
+          "id": "attack-1",
+          "step": "start"
+        }
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "event",
+        "t": 1500,
+        "magnitude": 0.35714285714285715,
+        "actor": "other",
+        "target": "self",
+        "valence": "good",
+        "importance": 0.6,
+        "outcome": "blocked",
+        "description": "player shield blocks enemy slash attack",
+        "gauges": [
+          "shield"
+        ],
+        "sound": "player_block",
+        "base": "player_block",
+        "chain": {
+          "id": "attack-1",
+          "step": "resolve"
+        }
+      }
+    },
+    {
+      "kind": "base",
+      "name": "player_block",
+      "t": 1500
+    },
+    {
+      "kind": "base",
+      "name": "player_guard_break",
+      "t": 1500
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "event",
+        "t": 1500,
+        "magnitude": 0.8,
+        "valence": "bad",
+        "importance": 0.9,
+        "actor": "other",
+        "target": "self",
+        "outcome": "broke",
+        "description": "player shield breaks",
+        "gauges": [
+          "shield"
+        ],
+        "sound": "guard_break",
+        "base": "player_guard_break",
+        "chain": {
+          "id": "attack-1",
+          "step": "end"
+        }
+      }
+    },
+    {
+      "kind": "signal",
+      "signal": {
+        "kind": "gauge",
+        "t": 1500,
+        "id": "shield",
+        "value": 0,
+        "goodWhen": "high",
+        "owner": "self",
+        "thresholds": [
+          0.34
+        ],
+        "description": "player shield durability"
+      }
+    }
+  ]
+}
