@@ -1,0 +1,412 @@
+{
+ "about": "4-2' (v5 3.3): D5' fills fields the game may leave empty, from the description; truth is what the demo game sent (recorded scenarios) or, for the reworded set, hand labels in the game's conventions (actor = whoever started the exchange, valence = for the player). D5'' judges situations whose answer is in the text; truth levels are set by construction.",
+ "game": [
+  {
+   "text": "player slashes enemy torso with paper sword.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.5
+  },
+  {
+   "text": "player heavily smashes enemy head with paper hammer.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.7
+  },
+  {
+   "text": "player slashes enemy head with paper sword.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.7
+  },
+  {
+   "text": "player fells the enemy.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.8
+  },
+  {
+   "text": "player heavily slashes enemy torso with paper sword.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.5
+  },
+  {
+   "text": "player fells the boss.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 1
+  },
+  {
+   "text": "enemy guard blocks player paper sword at torso.",
+   "valence": "bad",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.5
+  },
+  {
+   "text": "player blade misses enemy.",
+   "valence": "neutral",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.1
+  },
+  {
+   "text": "enemy counter stance parries player blade.",
+   "valence": "bad",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.7
+  },
+  {
+   "text": "enemy slash attack hits player.",
+   "valence": "bad",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.8
+  },
+  {
+   "text": "player swing is held back.",
+   "valence": "neutral",
+   "actor": "self",
+   "target": "other",
+   "importance": 0
+  },
+  {
+   "text": "player unleashes paper-rending combo.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.8
+  },
+  {
+   "text": "player paper-rending combo hits enemy with paper sword.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.4
+  },
+  {
+   "text": "player burst is cut short.",
+   "valence": "neutral",
+   "actor": "self",
+   "target": "other",
+   "importance": 0
+  },
+  {
+   "text": "player shield blocks enemy slash attack.",
+   "valence": "good",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.6
+  },
+  {
+   "text": "player shield breaks.",
+   "valence": "bad",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.9
+  },
+  {
+   "text": "player shield perfectly counters enemy slash attack.",
+   "valence": "good",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.9
+  },
+  {
+   "text": "player dodges enemy slash attack at the last instant.",
+   "valence": "good",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.9
+  },
+  {
+   "text": "player dodges enemy slash attack.",
+   "valence": "good",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.4
+  },
+  {
+   "text": "player slashes enemy weaponHand with paper sword.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.5
+  },
+  {
+   "text": "enemy attack is called off.",
+   "valence": "neutral",
+   "actor": "other",
+   "target": "self",
+   "importance": 0
+  },
+  {
+   "text": "enemy guard breaks.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.8
+  },
+  {
+   "text": "player falls.",
+   "valence": "bad",
+   "actor": "other",
+   "target": "self",
+   "importance": 1
+  }
+ ],
+ "reworded": [
+  {
+   "text": "the hero's blade bites deep into the foe's shoulder.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.6
+  },
+  {
+   "text": "the foe's club crashes into the hero's ribs.",
+   "valence": "bad",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.8
+  },
+  {
+   "text": "the hero swings wide and cuts only air.",
+   "valence": "neutral",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.1
+  },
+  {
+   "text": "the foe raises a buckler and the hero's strike glances off.",
+   "valence": "bad",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.5
+  },
+  {
+   "text": "the hero catches the foe's axe on a raised shield.",
+   "valence": "good",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.6
+  },
+  {
+   "text": "the hero steps aside as the foe's spear rushes past.",
+   "valence": "good",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.5
+  },
+  {
+   "text": "with a final blow the hero brings the warlord down.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 1.0
+  },
+  {
+   "text": "the hero collapses under the foe's last strike.",
+   "valence": "bad",
+   "actor": "other",
+   "target": "self",
+   "importance": 1.0
+  },
+  {
+   "text": "the hero's shield splinters under the foe's hammer.",
+   "valence": "bad",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.9
+  },
+  {
+   "text": "the foe lowers the weapon and backs away.",
+   "valence": "neutral",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.0
+  },
+  {
+   "text": "the hero turns the foe's thrust aside at the very last moment.",
+   "valence": "good",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.9
+  },
+  {
+   "text": "the hero lands a light jab on the foe's arm.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.4
+  },
+  {
+   "text": "the foe's defence shatters and leaves an opening.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.8
+  },
+  {
+   "text": "the hero hesitates and holds the swing back.",
+   "valence": "neutral",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.0
+  },
+  {
+   "text": "the foe slips past the hero's thrust and counters.",
+   "valence": "bad",
+   "actor": "other",
+   "target": "self",
+   "importance": 0.7
+  },
+  {
+   "text": "the hero knocks the foe off balance with a heavy blow.",
+   "valence": "good",
+   "actor": "self",
+   "target": "other",
+   "importance": 0.7
+  }
+ ],
+ "danger": [
+  {
+   "text": "enemy winds up a bash attack. player health: low. player shield durability: none.",
+   "level": 3
+  },
+  {
+   "text": "enemy winds up a bash attack. player health: low. player shield durability: full.",
+   "level": 2
+  },
+  {
+   "text": "enemy winds up a bash attack. player health: full. player shield durability: none.",
+   "level": 2
+  },
+  {
+   "text": "enemy winds up a bash attack. player health: full. player shield durability: full.",
+   "level": 1
+  },
+  {
+   "text": "enemy winds up a slash attack. player health: low. player shield durability: none.",
+   "level": 3
+  },
+  {
+   "text": "enemy winds up a slash attack. player health: low. player shield durability: full.",
+   "level": 2
+  },
+  {
+   "text": "enemy winds up a slash attack. player health: full. player shield durability: none.",
+   "level": 2
+  },
+  {
+   "text": "enemy winds up a slash attack. player health: full. player shield durability: full.",
+   "level": 1
+  },
+  {
+   "text": "enemy is open to attack. player health: low. player shield durability: none.",
+   "level": 0
+  },
+  {
+   "text": "enemy is open to attack. player health: low. player shield durability: full.",
+   "level": 0
+  },
+  {
+   "text": "enemy is open to attack. player health: full. player shield durability: none.",
+   "level": 0
+  },
+  {
+   "text": "enemy is open to attack. player health: full. player shield durability: full.",
+   "level": 0
+  },
+  {
+   "text": "enemy guard breaks. player health: low. player shield durability: none.",
+   "level": 0
+  },
+  {
+   "text": "enemy guard breaks. player health: low. player shield durability: full.",
+   "level": 0
+  },
+  {
+   "text": "enemy guard breaks. player health: full. player shield durability: none.",
+   "level": 0
+  },
+  {
+   "text": "enemy guard breaks. player health: full. player shield durability: full.",
+   "level": 0
+  }
+ ],
+ "decisive": [
+  {
+   "text": "player heavily smashes enemy head with paper hammer. enemy health: low. player health: low.",
+   "level": 2
+  },
+  {
+   "text": "player heavily smashes enemy head with paper hammer. enemy health: low. player health: full.",
+   "level": 2
+  },
+  {
+   "text": "player heavily smashes enemy head with paper hammer. enemy health: full. player health: low.",
+   "level": 0
+  },
+  {
+   "text": "player heavily smashes enemy head with paper hammer. enemy health: full. player health: full.",
+   "level": 0
+  },
+  {
+   "text": "player slashes enemy torso with paper sword. enemy health: low. player health: low.",
+   "level": 2
+  },
+  {
+   "text": "player slashes enemy torso with paper sword. enemy health: low. player health: full.",
+   "level": 2
+  },
+  {
+   "text": "player slashes enemy torso with paper sword. enemy health: full. player health: low.",
+   "level": 0
+  },
+  {
+   "text": "player slashes enemy torso with paper sword. enemy health: full. player health: full.",
+   "level": 0
+  },
+  {
+   "text": "enemy slash attack hits player. enemy health: low. player health: low.",
+   "level": 2
+  },
+  {
+   "text": "enemy slash attack hits player. enemy health: low. player health: full.",
+   "level": 0
+  },
+  {
+   "text": "enemy slash attack hits player. enemy health: full. player health: low.",
+   "level": 2
+  },
+  {
+   "text": "enemy slash attack hits player. enemy health: full. player health: full.",
+   "level": 0
+  },
+  {
+   "text": "player blade misses enemy. enemy health: low. player health: low.",
+   "level": 1
+  },
+  {
+   "text": "player blade misses enemy. enemy health: low. player health: full.",
+   "level": 1
+  },
+  {
+   "text": "player blade misses enemy. enemy health: full. player health: low.",
+   "level": 0
+  },
+  {
+   "text": "player blade misses enemy. enemy health: full. player health: full.",
+   "level": 0
+  }
+ ]
+}
