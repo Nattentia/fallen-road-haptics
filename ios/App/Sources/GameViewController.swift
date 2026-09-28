@@ -13,10 +13,16 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         return self.log.toJs(Clock.nowMs())
     })
     private lazy var upscaler = UpscalerPlayer(backend: backend)
+    private let liveLaya = LiveLaya()
     private static let gameURL = URL(string: "app://local/game.html?probe=1")!
+    private static let reducedURL = URL(string: "app://local/game.html?probe=1&reduced=1")!
     private static let labURL = URL(string: "app://local/game.html?lab=1")!
+    private static let roadURL = URL(string: "app://local/game.html?road=1")!
     private let statsLabel = UILabel()
     private weak var modeButton: UIButton?
+    private weak var inputButton: UIButton?
+    private var reducedInput = false
+    private var pageGeneration = 0
     private var statsTimer: Timer?
 
     override var prefersStatusBarHidden: Bool { true }
@@ -89,6 +95,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         switch type {
         case "hello":
             // A page (re)loaded: whatever the previous page held has no owner.
+            pageGeneration += 1
             upscaler.releaseAll()
             log.resetSync()
             sendThermalState()
@@ -155,7 +162,20 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
             for item in raw {
                 do {
                     let command = try UpscalerCommand.from(message: item)
-                    upscaler.apply(command)
+                    if case .ask(let voice, let requestId, let state, let questions) = command {
+                        let generation = pageGeneration
+                        liveLaya.ask(voice: voice, requestId: requestId, state: state, questions: questions) { [weak self] hints in
+                            guard let self, self.pageGeneration == generation,
+                                  self.upscaler.mode == .full else { return }
+                            for hint in hints {
+                                guard let data = try? JSONEncoder().encode(hint),
+                                      let json = String(data: data, encoding: .utf8) else { continue }
+                                self.webView.evaluateJavaScript("window.__hsHint&&window.__hsHint(\(json))")
+                            }
+                        }
+                    } else {
+                        upscaler.apply(command)
+                    }
                     ops.append(command.op)
                 } catch {
                     NSLog("upscaler: undecodable command \(error)")
@@ -167,6 +187,16 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
                 t1: (body["t1"] as? NSNumber)?.doubleValue ?? .nan,
                 t2: log.toJs(received), t3: log.toJs(done),
                 haptic: !ops.isEmpty, syncRtt: log.syncRtt
+            ))
+        case "hint":
+            recorder.add(body, receivedAt: log.toJs(received))
+            let hint = body["hint"] as? [String: Any] ?? [:]
+            let done = Clock.nowMs()
+            log.add(.init(
+                seq: seq, kind: "hint", detail: hint["field"] as? String ?? "", speed: 0, t0: nil,
+                t1: (body["t1"] as? NSNumber)?.doubleValue ?? .nan,
+                t2: log.toJs(received), t3: log.toJs(done),
+                haptic: false, syncRtt: log.syncRtt
             ))
         case "labSet":
             if let fade = (body["reviseFadeMs"] as? NSNumber)?.doubleValue { UpscalerPlayer.reviseFadeMs = fade }
@@ -191,7 +221,9 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         case "labExit":
             UpscalerPlayer.reviseFadeMs = 8
             CoreHapticsBackend.holdSegmentSeconds = 30
-            webView.load(URLRequest(url: Self.gameURL))
+            webView.load(URLRequest(url: reducedInput ? Self.reducedURL : Self.gameURL))
+        case "roadExit":
+            webView.load(URLRequest(url: reducedInput ? Self.reducedURL : Self.gameURL))
         default:
             break
         }
@@ -226,9 +258,11 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
 
         let buttons = UIStackView(arrangedSubviews: [
             makeButton("햅틱: \(UpscalerPlayer.Mode.full.rawValue)", #selector(toggleHaptics), keep: true),
+            makeButton("입력: 전체", #selector(toggleInput)),
             makeButton("기록 저장", #selector(exportLog)),
             makeButton("Lab", #selector(openLab)),
             makeButton("업스케일 Lab", #selector(openUpscalerLab)),
+            makeButton("노면", #selector(openRoad)),
         ])
         buttons.axis = .horizontal
         buttons.spacing = 6
@@ -254,6 +288,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         let button = UIButton(configuration: config)
         button.addTarget(self, action: action, for: .touchUpInside)
         if keep { modeButton = button }
+        if title == "입력: 전체" { inputButton = button }
         return button
     }
 
@@ -267,6 +302,12 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
     private func setMode(_ mode: UpscalerPlayer.Mode) {
         upscaler.setMode(mode)
         modeButton?.configuration?.title = "햅틱: \(mode.rawValue)"
+    }
+
+    @objc private func toggleInput() {
+        reducedInput.toggle()
+        inputButton?.configuration?.title = reducedInput ? "입력: 축소" : "입력: 전체"
+        webView.load(URLRequest(url: reducedInput ? Self.reducedURL : Self.gameURL))
     }
 
     @objc private func exportLog() {
@@ -289,6 +330,11 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         let lab = LabViewController()
         lab.modalPresentationStyle = .fullScreen
         present(lab, animated: true)
+    }
+
+    @objc private func openRoad() {
+        setMode(.full)
+        webView.load(URLRequest(url: Self.roadURL))
     }
 }
 

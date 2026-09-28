@@ -81,6 +81,27 @@ export const LIVE_QUESTIONS: readonly LiveQuestion[] = [
   },
 ];
 
+/** Only the two in-text fields that cleared the 4-2' diagnostic. Each is
+ * asked in both option orders; native averages probabilities by label. */
+export const SCENE_QUESTIONS: readonly Question[] = [
+  {
+    id: 'valence', kind: 'choice', prompt: 'For the player, this moment is',
+    options: ['good for the player', 'bad for the player', 'neither good nor bad'],
+  },
+  {
+    id: 'valence~rev', kind: 'choice', prompt: 'For the player, this moment is',
+    options: ['neither good nor bad', 'bad for the player', 'good for the player'],
+  },
+  {
+    id: 'actor', kind: 'choice', prompt: 'Who started this exchange?',
+    options: ['the player', 'the opponent', 'the surroundings'],
+  },
+  {
+    id: 'actor~rev', kind: 'choice', prompt: 'Who started this exchange?',
+    options: ['the surroundings', 'the opponent', 'the player'],
+  },
+];
+
 /** 1 − normalized entropy: how decided the answer is (0..1). */
 export const decidedness = (p: readonly number[]): number => {
   const k = p.length;

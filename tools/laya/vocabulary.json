@@ -47,6 +47,46 @@
         "a surface scrapes along",
         "something fragile shatters"
       ]
+    },
+    {
+      "id": "valence",
+      "type": "choice",
+      "instructions": "For the player, this moment is",
+      "criteria": [
+        "good for the player",
+        "bad for the player",
+        "neither good nor bad"
+      ]
+    },
+    {
+      "id": "valence~rev",
+      "type": "choice",
+      "instructions": "For the player, this moment is",
+      "criteria": [
+        "neither good nor bad",
+        "bad for the player",
+        "good for the player"
+      ]
+    },
+    {
+      "id": "actor",
+      "type": "choice",
+      "instructions": "Who started this exchange?",
+      "criteria": [
+        "the player",
+        "the opponent",
+        "the surroundings"
+      ]
+    },
+    {
+      "id": "actor~rev",
+      "type": "choice",
+      "instructions": "Who started this exchange?",
+      "criteria": [
+        "the surroundings",
+        "the opponent",
+        "the player"
+      ]
     }
   ],
   "pieces": [

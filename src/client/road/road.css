@@ -1,0 +1,18 @@
+.road-demo { box-sizing: border-box; min-height: 100vh; padding: 22px 30px; color: #f7efd8; background: #152329; font: 17px system-ui, sans-serif; }
+.road-top { display: flex; justify-content: space-between; align-items: center; letter-spacing: .12em; font-size: 12px; }
+.road-demo h1 { margin: 14px 0 2px; font-size: 36px; }
+.road-demo p { margin: 4px 0 12px; }
+.road-demo button, .road-demo a { border: 1px solid #d2b778; border-radius: 7px; padding: 8px 15px; background: #263c42; color: inherit; font: inherit; text-decoration: none; }
+.road-demo button.selected, .road-demo button.road-drive { background: #af915d; color: #172225; }
+.road-window { position: relative; height: min(30vh, 190px); min-height: 110px; overflow: hidden; border: 2px solid #d2b778; border-radius: 10px; background: #92b7c4; }
+.road-sky { position: absolute; inset: 0 0 65%; background: linear-gradient(#668e9e, #bad1c5); }
+.road-track { position: absolute; inset: 35% 0 0; transition: background-color .25s; }
+.road-lines { position: absolute; left: 49%; top: 0; bottom: 0; width: 2%; background: repeating-linear-gradient(to bottom, #f2dfb5 0 18px, transparent 18px 36px); }
+.road-car { position: absolute; bottom: 12%; left: 48%; font-size: 32px; color: #ed5f4e; text-shadow: 0 2px 2px #223; }
+.road-car.moving { animation: road-bob .3s infinite alternate ease-in-out; }
+@keyframes road-bob { to { transform: translateY(-4px); } }
+.road-controls { display: flex; align-items: center; gap: 18px; margin-top: 14px; flex-wrap: wrap; }
+.road-surfaces { display: flex; gap: 6px; }
+.road-controls label { display: flex; align-items: center; gap: 8px; }
+.road-controls input { accent-color: #d2b778; }
+.road-status { font-size: 14px; opacity: .85; }

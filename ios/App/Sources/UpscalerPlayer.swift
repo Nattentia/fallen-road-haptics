@@ -104,8 +104,8 @@ final class UpscalerPlayer {
             dropIfEmpty(voice)
         case .release(let voice, let at, let fadeMs):
             release(voice, at: at, fadeMs: fadeMs)
-        case .ask(let voice, _, let questions):
-            log("ask \(voice) \(questions.count) question(s): not connected yet")
+        case .ask:
+            break // GameViewController dispatches model work off the main thread.
         case .unknown(let op):
             log("unknown command \(op)")
         }
