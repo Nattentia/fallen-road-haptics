@@ -91,13 +91,28 @@ export const installNativeBridge = (game: Game): boolean => {
   // Game → upscaler → native player.
   const link = new UpscalerLink(new HapticUpscaler(), sendCommands);
   link.define(BASE_VIBRATIONS);
-  (window as NativeWindow).__hsHint = (hint) => link.hint(hint);
+  (window as NativeWindow).__hsHint = (hint) => {
+    link.hint(hint);
+    post({ type: 'hint', hint, t1: performance.now() });
+  };
+  const reduced = new URLSearchParams(window.location.search).get('reduced') === '1';
   (window as NativeWindow).__hsLoad = (state) =>
     link.load(loadForThermal(state));
   game.events.on(BASE_HAPTIC_EVENT, (e: BaseHapticEvent) =>
     link.base(e.action)
   );
-  game.events.on(SIGNAL_EVENT, (signal: Signal) => link.signal(signal));
+  game.events.on(SIGNAL_EVENT, (signal: Signal) => {
+    const input: Signal = reduced && signal.kind === 'event' &&
+      signal.chain?.step !== 'cancel' && signal.magnitude > 0.05
+      ? {
+        ...signal,
+        valence: 'neutral', actor: 'world', target: 'world',
+        infer: ['valence', 'actor', 'target'],
+      }
+      : signal;
+    link.signal(input);
+    post({ type: 'signal', signal: input, t1: performance.now() });
+  });
   game.events.once(SFX_LOADED_EVENT, () =>
     analyzeLoaded(
       sfxFirstVariants().map(({ id, cacheKey }) => ({
@@ -123,9 +138,6 @@ export const installNativeBridge = (game: Game): boolean => {
   });
   game.events.on(BASE_HAPTIC_EVENT, (e: BaseHapticEvent) => {
     post({ type: 'base', action: e.action, t1: performance.now() });
-  });
-  game.events.on(SIGNAL_EVENT, (signal: Signal) => {
-    post({ type: 'signal', signal, t1: performance.now() });
   });
   return true;
 };

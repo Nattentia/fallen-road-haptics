@@ -53,6 +53,8 @@ export type EventSignal = Envelope & {
   importance: number;
   actor: Party;
   target: Party;
+  /** Fields deliberately hidden from the upscaler for the reduced-input demo. */
+  infer?: ('valence' | 'actor' | 'target')[];
   outcome: Outcome;
   /** Short fixed-form English phrase describing what happened. */
   description: string;
@@ -235,9 +237,10 @@ export const statePhrases = (
   } else {
     phrases.push(phrase.intensity(levelOf(signal.value)));
   }
-  if (signal.actor) phrases.push(phrase.by(signal.actor));
-  if (signal.target) phrases.push(phrase.to(signal.target));
-  if (signal.valence) phrases.push(phrase.forPlayer(signal.valence));
+  const hidden = signal.kind === 'event' ? signal.infer : undefined;
+  if (signal.actor && !hidden?.includes('actor')) phrases.push(phrase.by(signal.actor));
+  if (signal.target && !hidden?.includes('target')) phrases.push(phrase.to(signal.target));
+  if (signal.valence && !hidden?.includes('valence')) phrases.push(phrase.forPlayer(signal.valence));
   for (const g of gauges)
     phrases.push(phrase.gauge(g.description, levelOf(g.value)));
   return phrases;

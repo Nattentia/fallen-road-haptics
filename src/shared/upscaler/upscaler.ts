@@ -5,6 +5,7 @@ import type {
   Signal,
   StreamSignal,
 } from '../haptics/signals';
+import { statePhrases } from '../haptics/signals';
 import type {
   BaseVibration,
   Command,
@@ -20,6 +21,8 @@ import type {
 import { Gauges, type GaugeMoment } from './gauges';
 import { ANTICIPATION, tension } from './anticipation';
 import { resolveMaterial } from './material';
+import { weightOf } from './material';
+import { SCENE_QUESTIONS } from './questions';
 import { resolveTexture, textureOfMaterial } from './texture';
 import { Mixer } from './mixer';
 import { bounce, strike, type Shape } from './parts';
@@ -55,6 +58,7 @@ export const TIMING = {
 
 type Recent = {
   signal: EventSignal;
+  requestId: string;
   at: number;
   until: number;
   importance: number;
@@ -73,6 +77,14 @@ type Chain = {
   streams: Map<string, Material>;
   resolvedAt?: number;
 };
+
+const scaleShape = (shape: Shape, weight: number): Shape => ({
+  events: shape.events.map((event) => ({
+    ...event,
+    intensity: event.intensity * weight,
+  })),
+  curves: shape.curves,
+});
 
 export class HapticUpscaler implements UpscalerEngine {
   private readonly bases = new Map<string, BaseVibration>();
@@ -146,6 +158,13 @@ export class HapticUpscaler implements UpscalerEngine {
 
   hint(hint: Hint, now: number): UpscalerStep {
     if (this.load === 'off') return { baseGain: 1, commands: [] };
+    const semanticHint = hint.field === 'valence' || hint.field === 'actor';
+    const current = this.recent.get(hint.voice);
+    if (semanticHint && (
+      !current?.signal.infer?.includes(hint.field) ||
+      !hint.requestId || hint.requestId !== current.requestId
+    ))
+      return { baseGain: 1, commands: [] };
     const list = this.hints.get(hint.voice) ?? [];
     list.push(hint);
     this.hints.set(hint.voice, list);
@@ -161,7 +180,10 @@ export class HapticUpscaler implements UpscalerEngine {
         DEFAULT_MATERIAL,
         this.soundOf(recent.signal.sound)
       ).fromSound;
-    if (recent && now < recent.until && !sounded) {
+    const semantic =
+      (hint.field === 'valence' || hint.field === 'actor') &&
+      recent?.signal.infer?.includes(hint.field);
+    if (recent && now < recent.until && (!sounded || semantic)) {
       const scores = this.phrase(recent.signal, hint.voice, recent.at, list);
       const rest = scores
         .map((s) => clipScore(s, now, this.nextId(hint.voice)))
@@ -246,6 +268,11 @@ export class HapticUpscaler implements UpscalerEngine {
     if (closing)
       commands.push(...this.closeStreams(voice, now, TIMING.streamFadeMs));
 
+    if (signal.infer?.length)
+      this.hints.set(voice, (this.hints.get(voice) ?? []).filter(
+        (hint) => hint.field !== 'valence' && hint.field !== 'actor'
+      ));
+
     const scores = this.phrase(signal, voice, now, this.hints.get(voice) ?? []);
     const base =
       input.paired && signal.base
@@ -269,8 +296,10 @@ export class HapticUpscaler implements UpscalerEngine {
     );
 
     const until = Math.max(now, ...placed.scores.map((s) => s.at + endOf(s)));
+    const requestId = signal.infer?.length ? this.nextId(`${voice}~ask`) : undefined;
     this.recent.set(voice, {
       signal,
+      requestId: requestId ?? '',
       at: now,
       until,
       importance: signal.importance,
@@ -282,6 +311,15 @@ export class HapticUpscaler implements UpscalerEngine {
         if (step === 'resolve') chain.resolvedAt = now;
         this.chains.set(voice, chain);
       }
+    }
+    if (signal.infer?.length) {
+      const ids = signal.infer.includes('valence')
+        ? ['valence', 'valence~rev']
+        : [];
+      if (signal.infer.includes('actor')) ids.push('actor', 'actor~rev');
+      const questions = SCENE_QUESTIONS.filter((q) => ids.includes(q.id));
+      if (questions.length)
+        commands.push({ op: 'ask', voice, requestId: requestId ?? '', state: statePhrases(signal), questions });
     }
     return { baseGain: placed.baseGain, commands };
   }
@@ -321,11 +359,32 @@ export class HapticUpscaler implements UpscalerEngine {
         ),
       },
     };
-    const source: ScoreSource =
-      !fromSound && used.length > 0
-        ? { kind: 'mix', hints: used }
-        : { kind: 'rule' };
-    return synthesize(input).map((shape) =>
+    let shapes = synthesize(input);
+    const semanticUsed = [] as { field: 'valence' | 'actor'; weight: number; latencyMs: number }[];
+    for (const field of ['valence', 'actor'] as const) {
+      if (!signal.infer?.includes(field)) continue;
+      const hint = [...hints].reverse().find((h) => h.field === field);
+      if (!hint) continue;
+      const weight = weightOf(hint);
+      if (weight === 0) continue;
+      if (hint.field === 'valence') input.valence = hint.value;
+      if (hint.field === 'actor') {
+        input.actor = hint.value;
+        if (signal.infer.includes('target'))
+          input.target = hint.value === 'self' ? 'other' : hint.value === 'other' ? 'self' : 'world';
+      }
+      const next = synthesize(input);
+      shapes = [
+        ...shapes.map((shape) => scaleShape(shape, 1 - weight)),
+        ...next.map((shape) => scaleShape(shape, weight)),
+      ];
+      semanticUsed.push({ field, weight, latencyMs: hint.latencyMs });
+    }
+    const allUsed = [...(fromSound ? [] : used), ...semanticUsed];
+    const source: ScoreSource = allUsed.length
+      ? { kind: 'mix', hints: allUsed }
+      : { kind: 'rule' };
+    return shapes.map((shape) =>
       this.toScore(shape, voice, at, source)
     );
   }

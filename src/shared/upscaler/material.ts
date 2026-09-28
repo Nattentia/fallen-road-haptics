@@ -39,6 +39,7 @@ export const resolveMaterial = (
   const out = { ...rule };
   const used: HintUse[] = [];
   for (const h of hints) {
+    if (h.field === 'valence' || h.field === 'actor') continue;
     const w = weightOf(h);
     if (w === 0) continue;
     const targets: Partial<Material> =

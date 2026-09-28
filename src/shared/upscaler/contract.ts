@@ -118,7 +118,7 @@ export type Command =
   /** End the voice: every held and scheduled vibration fades out. */
   | { op: 'release'; voice: string; at: number; fadeMs: number }
   /** Ask the live decision model; answers come back as `Hint`s. */
-  | { op: 'ask'; voice: string; state: string[]; questions: Question[] };
+  | { op: 'ask'; voice: string; requestId?: string; state: string[]; questions: Question[] };
 
 export type Question = {
   id: string;
@@ -141,17 +141,21 @@ export const CONTACT_CHARACTERS = [
   'shatter',
 ] as const;
 export type ContactCharacter = (typeof CONTACT_CHARACTERS)[number];
-export type HintField = MaterialField | 'contact';
+export type HintField = MaterialField | 'contact' | 'valence' | 'actor';
 
 export type Hint = {
   voice: string;
   questionId: string;
+  /** Matches the moment that requested this answer; late answers are ignored. */
+  requestId?: string;
   /** Calibrated 0..1; below the question's threshold it weighs nothing. */
   confidence: number;
   latencyMs: number;
 } & (
   | { field: MaterialField; value: number }
   | { field: 'contact'; value: ContactCharacter }
+  | { field: 'valence'; value: 'good' | 'bad' | 'neutral' }
+  | { field: 'actor'; value: 'self' | 'other' | 'world' }
 );
 
 // ---------------------------------------------------------------------------

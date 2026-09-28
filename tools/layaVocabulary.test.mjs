@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { gameVocabulary } from '../src/client/haptics/vocabulary';
 import { stateVocabulary } from '../src/shared/haptics/signals';
-import { LIVE_QUESTIONS } from '../src/shared/upscaler/questions';
+import { LIVE_QUESTIONS, SCENE_QUESTIONS } from '../src/shared/upscaler/questions';
 
 /**
  * Exports what the phone's Laya inputs are assembled from: the live
@@ -17,7 +17,7 @@ const FILE = 'tools/laya/vocabulary.json';
 const build = () => {
   const { descriptions, gauges } = gameVocabulary();
   return {
-    questions: LIVE_QUESTIONS.map(({ question }) => ({
+    questions: [...LIVE_QUESTIONS.map(({ question }) => question), ...SCENE_QUESTIONS].map((question) => ({
       id: question.id,
       type: question.kind,
       instructions: question.prompt,

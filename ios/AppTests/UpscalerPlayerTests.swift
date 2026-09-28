@@ -149,7 +149,7 @@ final class UpscalerPlayerTests: XCTestCase {
     func testFinishedScoresArePruned() {
         player.apply(.play(voice: "v", score: score("a", at: 0)))
         backend.nowMs = 500
-        player.apply(.ask(voice: "v", state: [], questions: []))
+        player.apply(.ask(voice: "v", requestId: nil, state: [], questions: []))
         XCTAssertNil(player.voices["v"])
     }
 

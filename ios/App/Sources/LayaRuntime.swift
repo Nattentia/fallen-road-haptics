@@ -79,7 +79,15 @@ final class LayaRuntime {
 
     /// Probabilities over the question's options (length = option count).
     func decide(state: Int, question: Int) throws -> [Double] {
-        let item = prompts.items[state][question]
+        try decide(prompts.items[state][question])
+    }
+
+    /// The same model path for a live state assembled from prepared phrases.
+    func decide(item: LayaLive.Item) throws -> [Double] {
+        try decide(Item(ids: item.ids, markers: item.markers, qtype: item.qtype, scale: item.scale))
+    }
+
+    private func decide(_ item: Item) throws -> [Double] {
         fill(item)
         let input = try MLDictionaryFeatureProvider(dictionary: [
             "embeddings": MLFeatureValue(multiArray: embeddings),

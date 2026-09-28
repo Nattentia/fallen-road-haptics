@@ -95,7 +95,7 @@ enum UpscalerCommand: Equatable {
     case drive(voice: String, stream: String, at: Double, intensity: Double, sharpness: Double, rampMs: Double)
     case unhold(voice: String, stream: String, at: Double, fadeMs: Double)
     case release(voice: String, at: Double, fadeMs: Double)
-    case ask(voice: String, state: [String], questions: [AskQuestion])
+    case ask(voice: String, requestId: String?, state: [String], questions: [AskQuestion])
     /// A command this build does not know; logged and skipped.
     case unknown(op: String)
 
@@ -118,7 +118,7 @@ enum UpscalerCommand: Equatable {
 extension UpscalerCommand: Decodable {
     private enum Key: String, CodingKey {
         case op, base, name, at, gain, voice, score, from, stream
-        case intensity, sharpness, rampMs, fadeMs, state, questions
+        case intensity, sharpness, rampMs, fadeMs, requestId, state, questions
     }
 
     init(from decoder: Decoder) throws {
@@ -146,7 +146,8 @@ extension UpscalerCommand: Decodable {
         case "release":
             self = .release(voice: try s(.voice), at: try d(.at), fadeMs: try d(.fadeMs))
         case "ask":
-            self = .ask(voice: try s(.voice), state: try c.decode([String].self, forKey: .state),
+            self = .ask(voice: try s(.voice), requestId: try c.decodeIfPresent(String.self, forKey: .requestId),
+                        state: try c.decode([String].self, forKey: .state),
                         questions: try c.decode([AskQuestion].self, forKey: .questions))
         default:
             self = .unknown(op: op)
