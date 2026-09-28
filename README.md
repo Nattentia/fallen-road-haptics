@@ -6,6 +6,14 @@ A first-person, paper-diorama roguelike built as a Reddit interactive post for t
 
 **Current status: Hackathon release candidate.** One run carries the player through four road fights, the Gatekeeper, and the Fallen King. Two three-way Gambit rewards, a final pre-throne choice, and two themed Paper Peddler stops shape a build from 15 Gambits and five weapons: **Paper Sword**, **Paper Spear**, **Paper Hammer**, **Paper Daggers**, and **Paper Mace**. Every weapon has its own attack rhythm and Burst. Health persists between fights (+18 on each kill); Gambits alter counter pressure, guard capacity, recovery, healing, Burst gain, and Burst damage.
 
+## Haptic Streamline experiment
+
+The iPhone wrapper adds a real-time haptic layer to Fallen Road. The game sends its ordinary vibration plus event, stream, gauge, and timing signals. A shared TypeScript engine turns those signals and the game's sound effects into Core Haptics commands; Swift schedules them on the device. The **햅틱** button cycles through base + upscale, base only, and off.
+
+The wrapper also includes **입력: 축소**, which hides the game's valence and actor labels from the upscaler and asks the local Laya Core ML model to fill them after the first vibration has started. This is an experimental comparison mode. The normal game uses the labels it already knows. **노면** opens a small second-genre demo: one continuous road-surface stream changes with speed and with asphalt, gravel, or grass.
+
+See [the architecture, reproducible checks, and measured limits](docs/HAPTIC_STREAMLINE.md). The [unsigned iPhone build and installation guide](docs/IPHONE.md) are available for device trials. Hardware feel tests for the current build remain unreported.
+
 Six adaptive road archetypes now fill the daily pool: **Road Soldier**, **Shield Bearer**, **Duelist**, **Spear Wraith**, **Bell Templar**, and **Cinder Reaver**. Leg hits slow, weapon-hand hits interrupt telegraphs, and the three final archetypes use dedicated painted paper-puppet rigs. Runtime art is kept near 2 MB while full-resolution generated sources remain under `assets/` for future reslicing.
 
 Every ranked daily run receives the same UTC-seeded road order, Gambit deck, and enemy RNG. The Devvit server issues a short-lived, user-bound run ticket, recomputes scores, retains each traveller's best score in a Redis leaderboard, and shows the top three on Home. A daily defeat preserves a compact weapon/Gambit snapshot as a **Fallen Rival**; another traveller can choose an unranked revenge duel from Home without changing competitive daily scores.

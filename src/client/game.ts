@@ -31,6 +31,10 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (new URLSearchParams(window.location.search).has('road')) {
+    void import('./road/road').then((m) => m.mountRoad());
+    return;
+  }
   // The upscaler Lab (opened from the iOS app) replaces the game page.
   const lab = new URLSearchParams(window.location.search).get('lab');
   if (lab !== null) {

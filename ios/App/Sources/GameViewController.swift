@@ -17,6 +17,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
     private static let gameURL = URL(string: "app://local/game.html?probe=1")!
     private static let reducedURL = URL(string: "app://local/game.html?probe=1&reduced=1")!
     private static let labURL = URL(string: "app://local/game.html?lab=1")!
+    private static let roadURL = URL(string: "app://local/game.html?road=1")!
     private let statsLabel = UILabel()
     private weak var modeButton: UIButton?
     private weak var inputButton: UIButton?
@@ -221,6 +222,8 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
             UpscalerPlayer.reviseFadeMs = 8
             CoreHapticsBackend.holdSegmentSeconds = 30
             webView.load(URLRequest(url: reducedInput ? Self.reducedURL : Self.gameURL))
+        case "roadExit":
+            webView.load(URLRequest(url: reducedInput ? Self.reducedURL : Self.gameURL))
         default:
             break
         }
@@ -259,6 +262,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
             makeButton("기록 저장", #selector(exportLog)),
             makeButton("Lab", #selector(openLab)),
             makeButton("업스케일 Lab", #selector(openUpscalerLab)),
+            makeButton("노면", #selector(openRoad)),
         ])
         buttons.axis = .horizontal
         buttons.spacing = 6
@@ -326,6 +330,11 @@ final class GameViewController: UIViewController, WKScriptMessageHandler {
         let lab = LabViewController()
         lab.modalPresentationStyle = .fullScreen
         present(lab, animated: true)
+    }
+
+    @objc private func openRoad() {
+        setMode(.full)
+        webView.load(URLRequest(url: Self.roadURL))
     }
 }
 
