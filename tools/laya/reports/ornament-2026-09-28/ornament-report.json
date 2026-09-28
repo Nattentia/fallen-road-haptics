@@ -1,0 +1,750 @@
+{
+  "model": "aac6fef/laya-multilingual-coreml-ane",
+  "task": "scene haptic flourish",
+  "metrics": {
+    "game": {
+      "n": 24,
+      "laya": 0.5416666666666666,
+      "one_way": 0.5833333333333334,
+      "rule": 1.0,
+      "option_flip": 0.2916666666666667
+    },
+    "reworded": {
+      "n": 24,
+      "laya": 0.4583333333333333,
+      "one_way": 0.5,
+      "rule": 0.25,
+      "option_flip": 0.25
+    },
+    "all": {
+      "n": 48,
+      "laya": 0.5,
+      "one_way": 0.5416666666666666,
+      "rule": 0.625,
+      "option_flip": 0.2708333333333333
+    },
+    "paraphrase_agreement": 0.5
+  },
+  "rows": [
+    {
+      "truth": "anticipation",
+      "phrasing": "game",
+      "text": "enemy winds up a slash attack toward player.",
+      "rule": "anticipation",
+      "one_way": "anticipation",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.27090000000000003,
+        "relief": 0.11095000000000001,
+        "triumph": 0.47005,
+        "setback": 0.14815
+      }
+    },
+    {
+      "truth": "anticipation",
+      "phrasing": "reworded",
+      "text": "the foe draws its blade back to strike the hero.",
+      "rule": "anticipation",
+      "one_way": "triumph",
+      "reverse": "anticipation",
+      "laya": "anticipation",
+      "both_probabilities": {
+        "anticipation": 0.34140000000000004,
+        "relief": 0.07815,
+        "triumph": 0.33499999999999996,
+        "setback": 0.2455
+      }
+    },
+    {
+      "truth": "anticipation",
+      "phrasing": "game",
+      "text": "boss charges a heavy attack at player.",
+      "rule": "anticipation",
+      "one_way": "setback",
+      "reverse": "triumph",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.15835,
+        "relief": 0.21484999999999999,
+        "triumph": 0.28335,
+        "setback": 0.34345000000000003
+      }
+    },
+    {
+      "truth": "anticipation",
+      "phrasing": "reworded",
+      "text": "the giant gathers force for a blow that has yet to land.",
+      "rule": "anticipation",
+      "one_way": "anticipation",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.2977,
+        "relief": 0.015600000000000001,
+        "triumph": 0.03715,
+        "setback": 0.64955
+      }
+    },
+    {
+      "truth": "anticipation",
+      "phrasing": "game",
+      "text": "enemy raises sword before attacking player.",
+      "rule": "anticipation",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.0601,
+        "relief": 0.2338,
+        "triumph": 0.6056999999999999,
+        "setback": 0.10035
+      }
+    },
+    {
+      "truth": "anticipation",
+      "phrasing": "reworded",
+      "text": "a hostile fighter lifts steel over the hero's head.",
+      "rule": "anticipation",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.21445,
+        "relief": 0.0623,
+        "triumph": 0.17995,
+        "setback": 0.54335
+      }
+    },
+    {
+      "truth": "anticipation",
+      "phrasing": "game",
+      "text": "enemy draws bow to shoot player.",
+      "rule": "anticipation",
+      "one_way": "anticipation",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.3086,
+        "relief": 0.0582,
+        "triumph": 0.2369,
+        "setback": 0.39625
+      }
+    },
+    {
+      "truth": "anticipation",
+      "phrasing": "reworded",
+      "text": "an archer takes aim at the hero before releasing the arrow.",
+      "rule": "anticipation",
+      "one_way": "anticipation",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.3048,
+        "relief": 0.0882,
+        "triumph": 0.1758,
+        "setback": 0.4312
+      }
+    },
+    {
+      "truth": "anticipation",
+      "phrasing": "game",
+      "text": "trap prepares to fire at player.",
+      "rule": "anticipation",
+      "one_way": "anticipation",
+      "reverse": "anticipation",
+      "laya": "anticipation",
+      "both_probabilities": {
+        "anticipation": 0.7461,
+        "relief": 0.0651,
+        "triumph": 0.12735,
+        "setback": 0.061399999999999996
+      }
+    },
+    {
+      "truth": "anticipation",
+      "phrasing": "reworded",
+      "text": "the floor mechanism clicks into place beneath the hero.",
+      "rule": "anticipation",
+      "one_way": "anticipation",
+      "reverse": "anticipation",
+      "laya": "anticipation",
+      "both_probabilities": {
+        "anticipation": 0.35475,
+        "relief": 0.15415,
+        "triumph": 0.1561,
+        "setback": 0.33505
+      }
+    },
+    {
+      "truth": "anticipation",
+      "phrasing": "game",
+      "text": "monster prepares to lunge at player.",
+      "rule": "anticipation",
+      "one_way": "anticipation",
+      "reverse": "anticipation",
+      "laya": "anticipation",
+      "both_probabilities": {
+        "anticipation": 0.7971999999999999,
+        "relief": 0.05735,
+        "triumph": 0.0994,
+        "setback": 0.046099999999999995
+      }
+    },
+    {
+      "truth": "anticipation",
+      "phrasing": "reworded",
+      "text": "the creature crouches, ready to spring toward the hero.",
+      "rule": "anticipation",
+      "one_way": "anticipation",
+      "reverse": "anticipation",
+      "laya": "anticipation",
+      "both_probabilities": {
+        "anticipation": 0.3854,
+        "relief": 0.26639999999999997,
+        "triumph": 0.22089999999999999,
+        "setback": 0.1273
+      }
+    },
+    {
+      "truth": "relief",
+      "phrasing": "game",
+      "text": "player dodges enemy slash at the last instant.",
+      "rule": "relief",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.01985,
+        "relief": 0.29745,
+        "triumph": 0.668,
+        "setback": 0.0147
+      }
+    },
+    {
+      "truth": "relief",
+      "phrasing": "reworded",
+      "text": "the hero slips clear of a blade by a hair.",
+      "rule": "anticipation",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.0815,
+        "relief": 0.21660000000000001,
+        "triumph": 0.26595,
+        "setback": 0.43600000000000005
+      }
+    },
+    {
+      "truth": "relief",
+      "phrasing": "game",
+      "text": "player shield blocks enemy heavy attack.",
+      "rule": "relief",
+      "one_way": "triumph",
+      "reverse": "relief",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.04895,
+        "relief": 0.45699999999999996,
+        "triumph": 0.47240000000000004,
+        "setback": 0.021650000000000003
+      }
+    },
+    {
+      "truth": "relief",
+      "phrasing": "reworded",
+      "text": "the hero catches the crushing blow on a shield.",
+      "rule": "anticipation",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.0023,
+        "relief": 0.020900000000000002,
+        "triumph": 0.01245,
+        "setback": 0.9642999999999999
+      }
+    },
+    {
+      "truth": "relief",
+      "phrasing": "game",
+      "text": "player parries enemy sword attack.",
+      "rule": "relief",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.21155,
+        "relief": 0.10435,
+        "triumph": 0.183,
+        "setback": 0.5011
+      }
+    },
+    {
+      "truth": "relief",
+      "phrasing": "reworded",
+      "text": "the hero turns aside an incoming blade.",
+      "rule": "anticipation",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.0704,
+        "relief": 0.30069999999999997,
+        "triumph": 0.47595,
+        "setback": 0.15295
+      }
+    },
+    {
+      "truth": "relief",
+      "phrasing": "game",
+      "text": "enemy arrow misses player.",
+      "rule": "relief",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.03385,
+        "relief": 0.0802,
+        "triumph": 0.0757,
+        "setback": 0.8102
+      }
+    },
+    {
+      "truth": "relief",
+      "phrasing": "reworded",
+      "text": "the shot sails harmlessly past the hero.",
+      "rule": "anticipation",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.01545,
+        "relief": 0.21045000000000003,
+        "triumph": 0.7655000000000001,
+        "setback": 0.0087
+      }
+    },
+    {
+      "truth": "relief",
+      "phrasing": "game",
+      "text": "player escapes enemy grab.",
+      "rule": "relief",
+      "one_way": "triumph",
+      "reverse": "relief",
+      "laya": "relief",
+      "both_probabilities": {
+        "anticipation": 0.0024999999999999996,
+        "relief": 0.5569999999999999,
+        "triumph": 0.43505,
+        "setback": 0.00545
+      }
+    },
+    {
+      "truth": "relief",
+      "phrasing": "reworded",
+      "text": "the hero wriggles free of the monster's grasp.",
+      "rule": "anticipation",
+      "one_way": "triumph",
+      "reverse": "relief",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.011800000000000001,
+        "relief": 0.47534999999999994,
+        "triumph": 0.49765,
+        "setback": 0.01525
+      }
+    },
+    {
+      "truth": "relief",
+      "phrasing": "game",
+      "text": "player avoids the trap as it fires.",
+      "rule": "relief",
+      "one_way": "triumph",
+      "reverse": "relief",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.03515,
+        "relief": 0.41955,
+        "triumph": 0.4769,
+        "setback": 0.0684
+      }
+    },
+    {
+      "truth": "relief",
+      "phrasing": "reworded",
+      "text": "the floor mechanism snaps shut behind the escaping hero.",
+      "rule": "anticipation",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.00605,
+        "relief": 0.21589999999999998,
+        "triumph": 0.0154,
+        "setback": 0.7627
+      }
+    },
+    {
+      "truth": "triumph",
+      "phrasing": "game",
+      "text": "player fells the enemy.",
+      "rule": "triumph",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.0033,
+        "relief": 0.0157,
+        "triumph": 0.8934,
+        "setback": 0.08764999999999999
+      }
+    },
+    {
+      "truth": "triumph",
+      "phrasing": "reworded",
+      "text": "the foe collapses after the hero's final strike.",
+      "rule": "anticipation",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.009250000000000001,
+        "relief": 0.06335,
+        "triumph": 0.22449999999999998,
+        "setback": 0.7028000000000001
+      }
+    },
+    {
+      "truth": "triumph",
+      "phrasing": "game",
+      "text": "player defeats the boss.",
+      "rule": "triumph",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.0009,
+        "relief": 0.0175,
+        "triumph": 0.9250499999999999,
+        "setback": 0.0565
+      }
+    },
+    {
+      "truth": "triumph",
+      "phrasing": "reworded",
+      "text": "the giant is beaten and the hero stands victorious.",
+      "rule": "anticipation",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.00025,
+        "relief": 0.0032500000000000003,
+        "triumph": 0.9926999999999999,
+        "setback": 0.00375
+      }
+    },
+    {
+      "truth": "triumph",
+      "phrasing": "game",
+      "text": "player kills the last enemy.",
+      "rule": "triumph",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.0127,
+        "relief": 0.024399999999999998,
+        "triumph": 0.8123499999999999,
+        "setback": 0.1505
+      }
+    },
+    {
+      "truth": "triumph",
+      "phrasing": "reworded",
+      "text": "the final opponent drops, ending the fight.",
+      "rule": "anticipation",
+      "one_way": "triumph",
+      "reverse": "setback",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.0015999999999999999,
+        "relief": 0.2464,
+        "triumph": 0.5145,
+        "setback": 0.23755
+      }
+    },
+    {
+      "truth": "triumph",
+      "phrasing": "game",
+      "text": "player wins the duel.",
+      "rule": "triumph",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.00045,
+        "relief": 0.0023,
+        "triumph": 0.9964,
+        "setback": 0.0007999999999999999
+      }
+    },
+    {
+      "truth": "triumph",
+      "phrasing": "reworded",
+      "text": "the hero emerges as victor of the duel.",
+      "rule": "anticipation",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.0005499999999999999,
+        "relief": 0.0032500000000000003,
+        "triumph": 0.99535,
+        "setback": 0.0008500000000000001
+      }
+    },
+    {
+      "truth": "triumph",
+      "phrasing": "game",
+      "text": "enemy surrenders to player.",
+      "rule": "triumph",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.01565,
+        "relief": 0.40305,
+        "triumph": 0.5467,
+        "setback": 0.0346
+      }
+    },
+    {
+      "truth": "triumph",
+      "phrasing": "reworded",
+      "text": "the defeated foe lays down its weapon before the hero.",
+      "rule": "anticipation",
+      "one_way": "anticipation",
+      "reverse": "relief",
+      "laya": "anticipation",
+      "both_probabilities": {
+        "anticipation": 0.3361,
+        "relief": 0.3247,
+        "triumph": 0.1597,
+        "setback": 0.17955
+      }
+    },
+    {
+      "truth": "triumph",
+      "phrasing": "game",
+      "text": "player lands the finishing blow on enemy.",
+      "rule": "triumph",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.0175,
+        "relief": 0.05065,
+        "triumph": 0.6844,
+        "setback": 0.24745
+      }
+    },
+    {
+      "truth": "triumph",
+      "phrasing": "reworded",
+      "text": "the hero's strike ends the opponent's resistance.",
+      "rule": "anticipation",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.00475,
+        "relief": 0.15415,
+        "triumph": 0.8296,
+        "setback": 0.0115
+      }
+    },
+    {
+      "truth": "setback",
+      "phrasing": "game",
+      "text": "enemy slash attack hits player.",
+      "rule": "setback",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.22725,
+        "relief": 0.09505,
+        "triumph": 0.53905,
+        "setback": 0.1386
+      }
+    },
+    {
+      "truth": "setback",
+      "phrasing": "reworded",
+      "text": "the hero takes the foe's blade across the chest.",
+      "rule": "anticipation",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.027450000000000002,
+        "relief": 0.07544999999999999,
+        "triumph": 0.85985,
+        "setback": 0.037250000000000005
+      }
+    },
+    {
+      "truth": "setback",
+      "phrasing": "game",
+      "text": "player shield breaks under enemy attack.",
+      "rule": "setback",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.03165,
+        "relief": 0.1729,
+        "triumph": 0.1745,
+        "setback": 0.621
+      }
+    },
+    {
+      "truth": "setback",
+      "phrasing": "reworded",
+      "text": "the hero's protection splinters from the blow.",
+      "rule": "anticipation",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.0018,
+        "relief": 0.00515,
+        "triumph": 0.0047,
+        "setback": 0.9883
+      }
+    },
+    {
+      "truth": "setback",
+      "phrasing": "game",
+      "text": "player falls after enemy strike.",
+      "rule": "setback",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.0038,
+        "relief": 0.01465,
+        "triumph": 0.0066,
+        "setback": 0.97495
+      }
+    },
+    {
+      "truth": "setback",
+      "phrasing": "reworded",
+      "text": "the foe knocks the hero to the ground.",
+      "rule": "anticipation",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.0353,
+        "relief": 0.0498,
+        "triumph": 0.0524,
+        "setback": 0.8625
+      }
+    },
+    {
+      "truth": "setback",
+      "phrasing": "game",
+      "text": "enemy attack stuns player.",
+      "rule": "setback",
+      "one_way": "anticipation",
+      "reverse": "setback",
+      "laya": "anticipation",
+      "both_probabilities": {
+        "anticipation": 0.25875000000000004,
+        "relief": 0.23825,
+        "triumph": 0.25875000000000004,
+        "setback": 0.2443
+      }
+    },
+    {
+      "truth": "setback",
+      "phrasing": "reworded",
+      "text": "the hero reels, dazed by the impact.",
+      "rule": "anticipation",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.0201,
+        "relief": 0.05535,
+        "triumph": 0.02745,
+        "setback": 0.8971
+      }
+    },
+    {
+      "truth": "setback",
+      "phrasing": "game",
+      "text": "player health drops from enemy hit.",
+      "rule": "setback",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.009899999999999999,
+        "relief": 0.05374999999999999,
+        "triumph": 0.03555,
+        "setback": 0.9008
+      }
+    },
+    {
+      "truth": "setback",
+      "phrasing": "reworded",
+      "text": "the foe's blow leaves the hero badly hurt.",
+      "rule": "anticipation",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.00115,
+        "relief": 0.0050999999999999995,
+        "triumph": 0.0015,
+        "setback": 0.9922500000000001
+      }
+    },
+    {
+      "truth": "setback",
+      "phrasing": "game",
+      "text": "boss grabs and crushes player.",
+      "rule": "setback",
+      "one_way": "setback",
+      "reverse": "setback",
+      "laya": "setback",
+      "both_probabilities": {
+        "anticipation": 0.05285,
+        "relief": 0.03575,
+        "triumph": 0.1852,
+        "setback": 0.7262
+      }
+    },
+    {
+      "truth": "setback",
+      "phrasing": "reworded",
+      "text": "the giant catches the hero and squeezes hard.",
+      "rule": "anticipation",
+      "one_way": "triumph",
+      "reverse": "triumph",
+      "laya": "triumph",
+      "both_probabilities": {
+        "anticipation": 0.0654,
+        "relief": 0.14065,
+        "triumph": 0.7188,
+        "setback": 0.0751
+      }
+    }
+  ]
+}
